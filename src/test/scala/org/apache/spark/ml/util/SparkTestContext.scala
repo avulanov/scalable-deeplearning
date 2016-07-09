@@ -7,6 +7,7 @@ import org.scalatest.{Suite, BeforeAndAfterAll}
 
 trait SparkTestContext extends BeforeAndAfterAll { self: Suite =>
   @transient var sc: SparkContext = _
+  @transient var sqlContext: SQLContext = _
 
   override def beforeAll() {
     super.beforeAll()
@@ -18,6 +19,7 @@ trait SparkTestContext extends BeforeAndAfterAll { self: Suite =>
     Logger.getLogger("org").setLevel(Level.OFF)
     Logger.getLogger("akka").setLevel(Level.OFF)
     sc = new SparkContext(conf)
+    sqlContext = new SQLContext(sc)
   }
 
   override def afterAll() {

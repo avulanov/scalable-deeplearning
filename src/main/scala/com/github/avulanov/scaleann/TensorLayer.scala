@@ -19,11 +19,12 @@ package com.github.avulanov.scaleann
 
 import java.util.Random
 
+import com.github.avulanov.scaleann.optimization._
+
 //import breeze.linalg.{*, DenseMatrix => BDM, DenseVector => BDV, Vector => BV, axpy => Baxpy}
 import com.github.avulanov.tensor.DenseTensor
 //import org.apache.spark.ml.ann.BreezeUtil
 import org.apache.spark.mllib.linalg.{BLAS, Vector, Vectors}
-import org.apache.spark.mllib.optimization._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.util.random.XORShiftRandom
 
@@ -381,7 +382,7 @@ private[scaleann] trait TopologyModel extends Serializable {
     * @param blockSize block size
     * @return error
     */
-  def computeGradient(data: Tensor, target: Tensor, cumGradient: Vector,
+  def computeGradient(data: Tensor, target: Tensor, cumGradient: Tensor,
                       blockSize: Int): Double
 }
 
@@ -491,7 +492,7 @@ class FeedForwardModel private(
   override def computeGradient(
                                 data: Tensor,
                                 target: Tensor,
-                                cumGradient: Vector,
+                                cumGradient: Tensor,
                                 realBatchSize: Int): Double = {
     val outputs = forward(data)
     val currentBatchSize = data.shape(1)
@@ -516,13 +517,13 @@ class FeedForwardModel private(
     for (i <- (L - 2) to (0, -1)) {
       layerModels(i + 1).prevDelta(deltas(i + 1), outputs(i + 1), deltas(i))
     }
-    val cumGradientArray = cumGradient.toArray
+    val cumGradientArray = cumGradient.data
     var offset = 0
     for (i <- 0 until layerModels.length) {
       val input = if (i == 0) data else outputs(i - 1)
       layerModels(i).grad(deltas(i), input,
         //new BDV[Double](cumGradientArray, offset, 1, layers(i).weightSize))
-        DenseTensor(cumGradientArray, Array(layers(i).weightSize), offset))
+        new Tensor(cumGradientArray, Array(layers(i).weightSize), offset))
       offset += layers(i).weightSize
     }
     loss
@@ -572,7 +573,8 @@ private[scaleann] object FeedForwardModel {
     //val weights = new BDV[Double](new Array[Double](totalSize))
     val weights: Tensor = DenseTensor(Array(totalSize))
     var offset = 0
-    val random = new XORShiftRandom(seed)
+    // TODO: check if we can re-use XORShiftRandom
+    val random = new Random(seed)
     for(i <- 0 until layers.length){
       layerModels(i) = layers(i).
         initModel(DenseTensor(weights.data, Array(layers(i).weightSize), offset), random)
@@ -592,8 +594,8 @@ private[scaleann] object FeedForwardModel {
   */
 private[scaleann] class ANNGradient(topology: Topology, dataStacker: DataStacker) extends Gradient {
 
-  override def compute(data: Vector, label: Double, weights: Vector): (Vector, Double) = {
-    val gradient = Vectors.zeros(weights.size)
+  override def compute(data: Vector, label: Double, weights: Tensor): (Tensor, Double) = {
+    val gradient = new Tensor(Array(weights.size))
     val loss = compute(data, label, weights, gradient)
     (gradient, loss)
   }
@@ -601,10 +603,10 @@ private[scaleann] class ANNGradient(topology: Topology, dataStacker: DataStacker
   override def compute(
                         data: Vector,
                         label: Double,
-                        weights: Vector,
-                        cumGradient: Vector): Double = {
+                        weights: Tensor,
+                        cumGradient: Tensor): Double = {
     val (input, target, realBatchSize) = dataStacker.unstack(data)
-    val model = topology.model(weights)
+    val model = topology.model(Vectors.dense(weights.data))
     model.computeGradient(input, target, cumGradient, realBatchSize)
   }
 }
@@ -678,15 +680,15 @@ private[scaleann] class DataStacker(stackSize: Int, inputSize: Int, outputSize: 
 private[scaleann] class ANNUpdater extends Updater {
 
   override def compute(
-                        weightsOld: Vector,
-                        gradient: Vector,
+                        weightsOld: Tensor,
+                        gradient: Tensor,
                         stepSize: Double,
                         iter: Int,
-                        regParam: Double): (Vector, Double) = {
+                        regParam: Double): (Tensor, Double) = {
     val thisIterStepSize = stepSize
 //    val brzWeights: BV[Double] = weightsOld.toBreeze.toDenseVector
 //    Baxpy(-thisIterStepSize, gradient.toBreeze, brzWeights)
-    BLAS.axpy(-thisIterStepSize, gradient, weightsOld)
+    DenseTensor.axpy(-thisIterStepSize, gradient, weightsOld)
     (weightsOld, 0)
   }
 }
@@ -837,8 +839,8 @@ class FeedForwardTrainer(
       getWeights
     }
     // TODO: deprecate standard optimizer because it needs Vector
-    val newWeights = optimizer.optimize(dataStacker.stack(data), w)
-    topology.model(newWeights)
+    val newWeights = optimizer.optimize(dataStacker.stack(data), new Tensor(w.toArray, Array(w.size), 0))
+    topology.model(Vectors.dense(newWeights.data))
   }
 
 }

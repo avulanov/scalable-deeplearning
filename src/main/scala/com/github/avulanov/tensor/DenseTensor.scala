@@ -29,17 +29,20 @@ object Algebra {
     def plus(x: T, y: T): T
     def minus(x: T, y: T): T
     def times(x: T, y: T): T
+    def sqrt(x: T): T
   }
   object NumberLike {
     implicit object NumberLikeDouble extends NumberLike[Double] {
       def plus(x: Double, y: Double): Double = x + y
       def minus(x: Double, y: Double): Double = x - y
       def times(x: Double, y: Double): Double = x * y
+      def sqrt(x: Double): Double = math.sqrt(x)
     }
     implicit object NumberLikeFloat extends NumberLike[Float] {
       def plus(x: Float, y: Float): Float = x + y
       def minus(x: Float, y: Float): Float = x - y
       def times(x: Float, y: Float): Float = x * y
+      def sqrt(x: Float): Float = math.sqrt(x.toDouble).toFloat
     }
   }
 }
@@ -66,6 +69,15 @@ class DenseTensor[@specialized(Double, Float) T] (
     "Actual size of the array does not correspond to dimension Sizes")
   private var myShape = tensorShape
 
+  /**
+    * Allocate new tensor
+    * @param tensorShape tensor shape
+    * @param m type parameter
+    * @param numOps ops parameter
+    */
+  def this(tensorShape: Array[Int])(implicit m: ClassTag[T], numOps: NumberLike[T]) = {
+    this(new Array[T](tensorShape.product), tensorShape, 0)
+  }
   /**
    * Tensor size (tensor data array might be bigger)
     *
@@ -214,6 +226,12 @@ class DenseTensor[@specialized(Double, Float) T] (
     array
   }
 
+  def copy()(implicit m: ClassTag[T]): DenseTensor[T] = {
+    val array = new Array[T](myShape.product)
+    System.arraycopy(data, offset, array, 0, array.length)
+    new DenseTensor(array, myShape, offset, isTransposed)
+  }
+
   /**
    * Fill tensor with the data from the other tensor
     *
@@ -311,15 +329,34 @@ class DenseTensor[@specialized(Double, Float) T] (
     true
   }
 
+  /**
+    * Sum of the elements
+    * @return sum
+    */
   def sum: T = {
-    var i = 0
-    val sz = size
-    var mySum = numOps.minus(data(0), data(0))
-    while (i < sz) {
+    var i = offset
+    var mySum = numOps.minus(data(i), data(i))
+    val max = offset + size
+    while (i < max) {
       mySum = numOps.plus(mySum, data(i))
       i += 1
     }
     mySum
+  }
+
+  /**
+    * Norm of the vector
+    * @return norm
+    */
+  def norm: T = {
+    var i = offset
+    var mySum = numOps.minus(data(i), data(i))
+    val max = offset + size
+    while (i < max) {
+      mySum = numOps.plus(mySum, numOps.times(data(i), data(i)))
+      i += 1
+    }
+    numOps.sqrt(mySum)
   }
 
   /**
@@ -599,6 +636,25 @@ object DenseTensor {
     NativeBLAS.saxpy(n, alpha, x.data, 1, y.data, 1)
   }
 
+  /**
+    * x := alpha * x
+    * @param alpha alpha
+    * @param x vector x
+    */
+  def scal(alpha: Double, x: DenseTensor[Double]): Unit = {
+    val n = x.size
+    NativeBLAS.dscal(n, alpha, x.data, x.offset, 1)
+  }
+
+  /**
+    * x := alpha * x
+    * @param alpha alpha
+    * @param x x
+    */
+  def scal(alpha: Float, x: DenseTensor[Float]): Unit = {
+    val n = x.size
+    NativeBLAS.sscal(n, alpha, x.data, x.offset, 1)
+  }
 
   protected def elementwise(
   a: DenseTensor[Double],

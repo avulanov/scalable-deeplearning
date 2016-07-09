@@ -5,6 +5,7 @@ import org.apache.spark.ml.anntensor.{MultilayerPerceptronClassifier => TMLP}
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
 import org.apache.spark.ml.util.SparkTestContext
 import org.apache.spark.mllib.util.{MLUtils}
+import org.apache.spark.sql.SQLContext
 import org.scalatest.FunSuite
 
 class ANNSpeedSuite extends FunSuite with SparkTestContext {

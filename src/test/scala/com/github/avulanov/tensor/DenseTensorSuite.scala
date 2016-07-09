@@ -18,12 +18,12 @@
 package com.github.avulanov.tensor
 
 import breeze.linalg.{Tensor, DenseMatrix => BDM}
-import org.apache.spark.SparkFunSuite
-import org.apache.spark.mllib.util.MLlibTestSparkContext
+import org.apache.spark.ml.util.SparkTestContext
+import org.scalatest.FunSuite
 
 import scala.collection.Set
 
-class DenseTensorSuite  extends SparkFunSuite with MLlibTestSparkContext {
+class DenseTensorSuite  extends FunSuite with SparkTestContext {
 
   test ("value") {
     val data = Array[Double](1, 2, 3, 4, 5, 6, 7, 8)
