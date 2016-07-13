@@ -18,7 +18,7 @@
 package com.github.avulanov.tensor
 
 import breeze.linalg.{DenseMatrix, sum}
-import com.github.avulanov.anntensor.My
+import com.github.avulanov.scaleann.My
 import org.scalatest.FunSuite
 
 import scala.util.Random

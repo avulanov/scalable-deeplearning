@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.github.avulanov.anntensor
+package com.github.avulanov.scaleann
 
 object Math {
   trait NumberLike[@specialized (Double, Int) T] {

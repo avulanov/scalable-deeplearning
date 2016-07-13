@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.github.avulanov.anntensor
+package com.github.avulanov.scaleann
 
 class NumericBoxingTest[@specialized(Double, Float) T : Numeric] {
   lazy val numOps = implicitly[Numeric[T]]
