@@ -49,22 +49,34 @@ object Algebra {
   import Algebra.NumberLike
 /**
  * Dense tensor column-major representation. // TODO: row major??
-  *
-  * @param data underlying data
+ *
+ * @param data underlying data
  * @param tensorShape shape of tensor
  * @param offset offset in the data
  * @tparam T type
  */
 class DenseTensor[@specialized(Double, Float) T] (
   val data: Array[T],
-  tensorShape: Array[Int],
+  val tensorShape: Array[Int],
   val offset: Int,
   isTransposed: Boolean = false)(implicit numOps: NumberLike[T]) extends Serializable {
+
+  private var actualSize: Int = 0
+  private var majorStride: Int = 0
+  private var requiredSize: Int = 0
+  // Fix of the Scala specialized constructor bug:
+  // http://axel22.github.io/2013/11/03/specialization-quirks.html
+  protected def init(data: Array[T], tensorShape: Array[Int]): Unit = {
+    actualSize = data.length - offset
+    majorStride = if (isTransposed) tensorShape.last else tensorShape.head
+    requiredSize = tensorShape.product
+  }
+  init(data, tensorShape)
   // TODO: figure out which of size, shape etc can be removed or replaced in other functions
-  private val actualSize = data.length - offset
-  // Major stride (always the first??? dimension since stored in columnar format)
-  val majorStride = if (isTransposed) tensorShape.last else tensorShape.head
-  val requiredSize = tensorShape.product
+//  private val actualSize = data.size//data.length - offset
+//  // Major stride (always the first??? dimension since stored in columnar format)
+//  private val majorStride = if (isTransposed) tensorShape.last else tensorShape.head
+//  private val requiredSize = tensorShape.product
   require(requiredSize <= actualSize,
     "Actual size of the array does not correspond to dimension Sizes")
   private var myShape = tensorShape
@@ -78,6 +90,18 @@ class DenseTensor[@specialized(Double, Float) T] (
   def this(tensorShape: Array[Int])(implicit m: ClassTag[T], numOps: NumberLike[T]) = {
     this(new Array[T](tensorShape.product), tensorShape, 0)
   }
+
+  /**
+    * New tensor given data and shape
+    * @param data data array
+    * @param tensorShape shape
+    * @param m type
+    * @param numOps ops
+    */
+  def this(data: Array[T], tensorShape: Array[Int])(implicit m: ClassTag[T], numOps: NumberLike[T]) = {
+    this(data, tensorShape, 0, false)
+  }
+
   /**
    * Tensor size (tensor data array might be bigger)
     *
@@ -425,7 +449,7 @@ object DenseTensor {
    * @tparam T implicit type
    * @return tensor
    */
-  def apply[T](data: Array[T], tensorShape: Array[Int], offset: Int = 0, isTransposed: Boolean = false)
+  def apply[@specialized(Double, Float) T](data: Array[T], tensorShape: Array[Int], offset: Int = 0, isTransposed: Boolean = false)
               (implicit m: ClassTag[T], numOps: NumberLike[T]): DenseTensor[T] = {
     new DenseTensor[T](data, tensorShape, offset, isTransposed)
   }

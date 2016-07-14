@@ -17,8 +17,7 @@
 
 package com.github.avulanov.scaleann
 
-import breeze.linalg.{DenseMatrix => BDM}
-
+import com.github.avulanov.tensor.DenseTensor
 import org.apache.spark.ml.util.SparkTestContext
 import org.apache.spark.mllib.linalg.Vectors
 
@@ -28,9 +27,10 @@ import org.scalatest.FunSuite
 class GradientSuite extends FunSuite with SparkTestContext {
 
   test("Gradient computation against numerical differentiation") {
-    val input = new Tensor(Array(1.0, 1.0, 1.0), Array(3, 1), 0)
+    val x = DenseTensor[Double](Array(1.0, 1.0, 1.0), Array(3, 1))
+    val input = new Tensor(Array(1.0, 1.0, 1.0), Array(3, 1))
     // output must contain zeros and one 1 for SoftMax
-    val target = new Tensor(Array(0.0, 1.0), Array(2, 1), 0)
+    val target = new Tensor(Array(0.0, 1.0), Array(2, 1))
     val topology = FeedForwardTopology.multiLayerPerceptron(Array(3, 4, 2), softmaxOnTop = false)
     val layersWithErrors = Seq(
       new SigmoidLayerWithSquaredError(),
