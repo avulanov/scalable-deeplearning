@@ -59,7 +59,7 @@ class MLPSuite extends FunSuite with SparkTestContext {
     val trainer = new MultilayerPerceptronClassifier()
       .setLayers(layers)
       .setBlockSize(1)
-      .setSeed(12L)
+      .setSeed(123456L)
       .setMaxIter(1)
       .setTol(1e-6)
     val initialWeights = trainer.fit(dataFrame).weights

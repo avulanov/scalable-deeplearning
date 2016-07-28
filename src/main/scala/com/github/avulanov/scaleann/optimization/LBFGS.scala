@@ -242,7 +242,7 @@ object LBFGS extends Logging {
           },
           combOp = (c1, c2) => (c1, c2) match { case ((grad1, loss1), (grad2, loss2)) =>
             //axpy(1.0, grad2, grad1)
-            DenseTensor.axpy(1, grad1, grad2)
+            DenseTensor.axpy(1, grad2, grad1)
             (grad1, loss1 + loss2)
           })
 

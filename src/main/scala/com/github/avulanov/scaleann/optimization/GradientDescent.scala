@@ -239,7 +239,7 @@ object GradientDescent extends Logging {
           combOp = (c1, c2) => {
             // c: (grad, loss, count)
             //(c1._1 += c2._1, c1._2 + c2._2, c1._3 + c2._3)
-            DenseTensor.axpy(1, c1._1, c2._1)
+            DenseTensor.axpy(1, c2._1, c1._1)
             (c1._1, c1._2 + c2._2, c1._3 + c2._3)
           })
 
