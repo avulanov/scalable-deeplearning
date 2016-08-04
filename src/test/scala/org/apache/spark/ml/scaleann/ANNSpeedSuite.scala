@@ -1,5 +1,6 @@
 package org.apache.spark.ml.scaleann
 
+import org.apache.log4j.{Level, LogManager}
 import org.apache.spark.ml.classification.MultilayerPerceptronClassifier
 import org.apache.spark.ml.anntensor.{MultilayerPerceptronClassifier => TMLP}
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
@@ -34,6 +35,9 @@ class ANNSpeedSuite extends FunSuite with SparkTestContext {
 //  }
 
   test ("speed test with tensor") {
+    val logger = LogManager.getRootLogger
+    logger.setLevel(Level.WARN)
+    logger.warn("xxx")
     val mnistPath = System.getenv("MNIST_HOME")
     println(mnistPath + "/mnist.scale")
     val dataFrame = sqlContext.
@@ -44,6 +48,7 @@ class ANNSpeedSuite extends FunSuite with SparkTestContext {
       .setMaxIter(2)
       .setSeed(1234L)
       .fit(dataFrame)
+    val weights = warmUp.weights
 
     val mlp = new MultilayerPerceptronClassifier().setLayers(Array(784, 32, 10))
       .setTol(10e-9)

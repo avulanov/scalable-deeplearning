@@ -19,7 +19,7 @@ package com.github.avulanov.scaleann
 
 import com.github.avulanov.tensor.DenseTensor
 import org.apache.spark.ml.util.SparkTestContext
-import org.apache.spark.mllib.linalg.Vectors
+import org.apache.spark.ml.linalg.Vectors
 
 import AnnTypes._
 import org.scalatest.FunSuite

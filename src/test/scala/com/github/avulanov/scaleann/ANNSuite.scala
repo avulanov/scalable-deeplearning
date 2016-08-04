@@ -18,7 +18,7 @@
 package com.github.avulanov.scaleann
 
 import org.apache.spark.ml.util.SparkTestContext
-import org.apache.spark.mllib.linalg.Vectors
+import org.apache.spark.ml.linalg.Vectors
 import org.scalatest.FunSuite
 
 

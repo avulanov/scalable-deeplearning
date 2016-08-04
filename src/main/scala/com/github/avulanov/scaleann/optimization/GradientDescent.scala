@@ -19,14 +19,14 @@ package com.github.avulanov.scaleann.optimization
 
 import com.github.avulanov.scaleann.AnnTypes.Tensor
 import com.github.avulanov.tensor.DenseTensor
+import org.apache.log4j.{Level, LogManager}
 
 import scala.collection.mutable.ArrayBuffer
 
 import breeze.linalg.{norm, DenseVector => BDV}
 
-import org.apache.spark.Logging
 import org.apache.spark.annotation.{DeveloperApi, Experimental}
-import org.apache.spark.mllib.linalg.{Vector, Vectors}
+import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
 
 
@@ -37,7 +37,7 @@ import org.apache.spark.rdd.RDD
  * @param updater Updater to be used to update weights after every iteration.
  */
 class GradientDescent (private var gradient: Gradient, private var updater: Updater)
-  extends Optimizer with Logging {
+  extends Optimizer {
 
   private var stepSize: Double = 1.0
   private var numIterations: Int = 100
@@ -150,7 +150,7 @@ class GradientDescent (private var gradient: Gradient, private var updater: Upda
  * Top-level method to run gradient descent.
  */
 @DeveloperApi
-object GradientDescent extends Logging {
+object GradientDescent {
   /**
    * Run stochastic gradient descent (SGD) in parallel using mini batches.
    * In each iteration, we sample a subset (fraction miniBatchFraction) of the total data
@@ -186,6 +186,15 @@ object GradientDescent extends Logging {
       miniBatchFraction: Double,
       initialWeights: Tensor,
       convergenceTol: Double): (Tensor, Array[Double]) = {
+    val log = LogManager.getRootLogger
+
+    def logWarning(msg: => String) {
+      if (log.isEnabledFor(Level.WARN)) log.warn(msg)
+    }
+    def logInfo(msg: => String) {
+      if (log.isEnabledFor(Level.INFO)) log.info(msg)
+    }
+
 
     // convergenceTol should be set with non minibatch settings
     if (miniBatchFraction < 1.0 && convergenceTol > 0.0) {
@@ -274,6 +283,7 @@ object GradientDescent extends Logging {
     (weights, stochasticLossHistory.toArray)
 
   }
+
 
   /**
    * Alias of [[runMiniBatchSGD]] with convergenceTol set to default value of 0.001.

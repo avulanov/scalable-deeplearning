@@ -19,20 +19,20 @@ package com.github.avulanov.scaleann.optimization
 
 import com.github.avulanov.scaleann.AnnTypes.Tensor
 import com.github.avulanov.tensor.DenseTensor
+import org.apache.log4j.{Level, LogManager}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-import org.apache.spark.mllib.linalg.Vector
+import org.apache.spark.ml.linalg.Vector
 
 
 import breeze.linalg.{DenseVector => BDV}
 import breeze.optimize.{CachedDiffFunction, DiffFunction, LBFGS => BreezeLBFGS}
 
-import org.apache.spark.Logging
 import org.apache.spark.rdd.RDD
 
 class LBFGS(private var gradient: Gradient, private var updater: Updater)
-  extends Optimizer with Logging {
+  extends Optimizer {
 
   private var numCorrections = 10
   private var convergenceTol = 1E-6
@@ -151,7 +151,7 @@ class LBFGS(private var gradient: Gradient, private var updater: Updater)
 
 }
 
-object LBFGS extends Logging {
+object LBFGS {
   /**
    * Run Limited-memory BFGS (L-BFGS) in parallel.
    * Averaging the subgradients over different partitions is performed using one standard
@@ -181,6 +181,15 @@ object LBFGS extends Logging {
       maxNumIterations: Int,
       regParam: Double,
       initialWeights: Tensor): (Tensor, Array[Double]) = {
+
+    val log = LogManager.getRootLogger
+
+    def logWarning(msg: => String) {
+      if (log.isEnabledFor(Level.WARN)) log.warn(msg)
+    }
+    def logInfo(msg: => String) {
+      if (log.isEnabledFor(Level.INFO)) log.info(msg)
+    }
 
     val lossHistory = mutable.ArrayBuilder.make[Double]
 

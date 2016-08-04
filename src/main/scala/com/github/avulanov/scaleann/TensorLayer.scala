@@ -24,7 +24,7 @@ import com.github.avulanov.scaleann.optimization._
 //import breeze.linalg.{*, DenseMatrix => BDM, DenseVector => BDV, Vector => BV, axpy => Baxpy}
 import com.github.avulanov.tensor.DenseTensor
 //import org.apache.spark.ml.ann.BreezeUtil
-import org.apache.spark.mllib.linalg.{BLAS, Vector, Vectors}
+import org.apache.spark.ml.linalg.{BLAS, Vector, Vectors}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.util.random.XORShiftRandom
 

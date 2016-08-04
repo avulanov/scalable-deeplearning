@@ -19,8 +19,9 @@ package com.github.avulanov.scaleann.optimization
 
 import com.github.avulanov.scaleann.AnnTypes.Tensor
 import com.github.avulanov.tensor.DenseTensor
+import org.apache.log4j.{Level, LogManager}
 import org.apache.spark.annotation.DeveloperApi
-import org.apache.spark.mllib.linalg.{DenseVector, Vector, Vectors}
+import org.apache.spark.ml.linalg.{DenseVector, Vector, Vectors}
 //import org.apache.spark.mllib.linalg.BLAS.{axpy, dot, scal}
 //import org.apache.spark.mllib.util.MLUtils
 
