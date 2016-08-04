@@ -94,19 +94,22 @@ private[ml] trait MultilayerPerceptronParams extends PredictorParams
   /** @group getParam */
   final def getLearningRate: Double = $(learningRate)
 
+
   /**
-    * Model weights. Can be returned either after training or after explicit setting
+    * The initial weights of the model.
     *
     * @group expertParam
     */
-  final val weights: Param[Vector] = new Param[Vector](this, "weights",
-    " Sets the weights of the model ")
+  @Since("2.0.0")
+  final val initialWeights: Param[Vector] = new Param[Vector](this, "initialWeights",
+    "The initial weights of the model")
 
-  /** @group getParam */
-  final def getWeights: Vector = $(weights)
+  /** @group expertGetParam */
+  @Since("2.0.0")
+  final def getInitialWeights: Vector = $(initialWeights)
 
-  setDefault(maxIter -> 100, tol -> 1e-4, layers -> Array(1, 1), blockSize -> 128,
-    optimizer -> "LBFGS", learningRate -> 0.03, weights -> null)
+  setDefault(maxIter -> 100, tol -> 1e-6, layers -> Array(1, 1), blockSize -> 128,
+    optimizer -> "LBFGS", learningRate -> 0.03)
 }
 
 /** Label to vector converter. */
@@ -193,12 +196,12 @@ class MultilayerPerceptronClassifier @Since("1.5.0") (
   def setSeed(value: Long): this.type = set(seed, value)
 
   /**
-    * Set the model weights.
+    * Sets the value of param [[initialWeights]].
     *
-    * @group setParam
+    * @group expertSetParam
     */
   @Since("2.0.0")
-  def setWeights(value: Vector): this.type = set(weights, value)
+  def setInitialWeights(value: Vector): this.type = set(initialWeights, value)
 
   /**
     * Generate weights.
@@ -227,8 +230,8 @@ class MultilayerPerceptronClassifier @Since("1.5.0") (
     val data = lpData.map(lp => LabelConverter.encodeLabeledPoint(lp, labels))
     val topology = FeedForwardTopology.multiLayerPerceptron(myLayers, true)
     val trainer = new FeedForwardTrainer(topology, myLayers(0), myLayers.last)
-    if ($(weights) != null) {
-      trainer.setWeights($(weights))
+    if (isDefined(initialWeights)) {
+      trainer.setWeights($(initialWeights))
     } else {
       trainer.setSeed($(seed))
     }
