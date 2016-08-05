@@ -28,7 +28,7 @@ import org.scalatest.FunSuite
 class MLPSuite extends FunSuite with SparkTestContext {
 
   test("XOR function learning as binary classification problem with two outputs.") {
-    val dataFrame = sqlContext.createDataFrame(Seq(
+    val dataFrame = spark.createDataFrame(Seq(
       (Vectors.dense(0.0, 0.0), 0.0),
       (Vectors.dense(0.0, 1.0), 1.0),
       (Vectors.dense(1.0, 0.0), 1.0),
@@ -49,7 +49,7 @@ class MLPSuite extends FunSuite with SparkTestContext {
   }
 
   test("Test setWeights by training restart") {
-    val dataFrame = sqlContext.createDataFrame(Seq(
+    val dataFrame = spark.createDataFrame(Seq(
       (Vectors.dense(0.0, 0.0), 0.0),
       (Vectors.dense(0.0, 1.0), 1.0),
       (Vectors.dense(1.0, 0.0), 1.0),

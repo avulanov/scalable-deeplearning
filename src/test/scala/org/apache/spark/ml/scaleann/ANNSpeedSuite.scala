@@ -35,13 +35,14 @@ class ANNSpeedSuite extends FunSuite with SparkTestContext {
 //  }
 
   test ("speed test with tensor") {
-    val logger = LogManager.getRootLogger
-    logger.setLevel(Level.WARN)
-    logger.warn("xxx")
     val mnistPath = System.getenv("MNIST_HOME")
     println(mnistPath + "/mnist.scale")
-    val dataFrame = sqlContext.
-      createDataFrame(MLUtils.loadLibSVMFile(sc, mnistPath + "/mnist.scale", 784)).persist()
+    val dataFrame = spark
+      .read
+      .format("libsvm")
+      .option("numFeatures", 784)
+      .load(mnistPath + "/mnist.scale")
+      .persist()
     dataFrame.count()
     val warmUp = new MultilayerPerceptronClassifier().setLayers(Array(784, 32, 10))
       .setTol(10e-9)
@@ -69,16 +70,20 @@ class ANNSpeedSuite extends FunSuite with SparkTestContext {
     println("Tensor total time: " + totalTensor / 1e9 +
       " s. (should be ~37s. without native BLAS with warm-up)")
 
-    val test = sqlContext.
-      createDataFrame(MLUtils.loadLibSVMFile(sc, mnistPath + "/mnist.scale.t", 784)).persist()
+    val test = spark
+      .read
+      .format("libsvm")
+      .option("numFeatures", 784)
+      .load(mnistPath + "/mnist.scale")
+      .persist()
     test.count()
     val result = model.transform(test)
     val pl = result.select("prediction", "label")
-    val ev = new MulticlassClassificationEvaluator().setMetricName("precision")
+    val ev = new MulticlassClassificationEvaluator().setMetricName("accuracy")
     println("ANN Accuracy: " + ev.evaluate(pl))
     val tResult = tModel.transform(test)
     val tpl = tResult.select("prediction", "label")
-    val tev = new MulticlassClassificationEvaluator().setMetricName("precision")
+    val tev = new MulticlassClassificationEvaluator().setMetricName("accuracy")
     println("Tensor Accuracy: " + tev.evaluate(tpl))
 
   }

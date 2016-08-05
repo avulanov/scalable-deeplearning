@@ -1,34 +1,36 @@
 package org.apache.spark.ml.util
 
-import org.apache.log4j.{LogManager, Logger, Level}
-import org.apache.spark.sql.SQLContext
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.log4j.{Logger, Level}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.SparkContext
 import org.scalatest.{Suite, BeforeAndAfterAll}
 
 trait SparkTestContext extends BeforeAndAfterAll { self: Suite =>
+  @transient var spark: SparkSession = _
   @transient var sc: SparkContext = _
-  @transient var sqlContext: SQLContext = _
+  @transient var checkpointDir: String = _
 
   override def beforeAll() {
     super.beforeAll()
-    val conf = new SparkConf()
-      .setMaster("local[2]")
-      .setAppName("SparkAlgorithmsUnitTest")
-      //.set("spark.eventLog.enabled", "true")
-      //.set("spark.eventLog.dir","log")
-    Logger.getLogger("org").setLevel(Level.OFF)
-    Logger.getLogger("akka").setLevel(Level.OFF)
-    sc = new SparkContext(conf)
-    sqlContext = new SQLContext(sc)
+    spark = SparkSession.builder
+      .master("local[2]")
+      .appName("MLlibUnitTest")
+      .config("spark.sql.warehouse.dir", "xxx")
+      .getOrCreate()
+    sc = spark.sparkContext
+    Logger.getLogger("org").setLevel(Level.WARN)
   }
 
   override def afterAll() {
-    if (sc != null) {
-      sc.stop()
+    try {
+      SparkSession.clearActiveSession()
+      if (spark != null) {
+        spark.stop()
+      }
+      spark = null
+    } finally {
+      super.afterAll()
     }
-    sc = null
-    super.afterAll()
   }
 }
-
 
