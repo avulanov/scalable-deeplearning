@@ -503,7 +503,7 @@ class FeedForwardModel private(
       for (i <- 0 until layerModels.length - 1) {
         val outputSize = layers(i).outputSize(inputSize)
         //deltas(i) = new BDM[Double](outputSize, currentBatchSize)
-        deltas(i) = DenseTensor(Array(outputSize, currentBatchSize))
+        deltas(i) = new Tensor(Array(outputSize, currentBatchSize))
         inputSize = outputSize
       }
     }
