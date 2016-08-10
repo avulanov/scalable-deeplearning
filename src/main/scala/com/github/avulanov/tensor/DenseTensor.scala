@@ -104,6 +104,8 @@ class DenseTensor[@specialized(Double, Float) T] (
 
   /**
    * Tensor size (tensor data array might be bigger)
+    * NB! don't use this for loops
+    * TODO: replace this with val
     *
     * @return
    */
@@ -479,7 +481,8 @@ object DenseTensor {
     */
   def applyFunction[T](x: DenseTensor[T], func: T => T): Unit = {
     var i = x.offset
-    while (i < (x.offset + x.size)) {
+    val sz = x.offset + x.size
+    while (i < sz) {
       x.data(i) = func(x.data(i))
       i += 1
     }
@@ -493,10 +496,12 @@ object DenseTensor {
    * @param func function
    * @tparam T type
    */
-  def applyFunction[T](x: DenseTensor[T], y: DenseTensor[T], func: T => T): Unit = {
+  def applyFunction[@specialized(Double, Float) T](x: DenseTensor[T], y: DenseTensor[T], func: T => T)
+                                                  (implicit m: ClassTag[T], numOps: NumberLike[T]): Unit = {
     require(x.size == y.size, "Tensor sizes must be equal")
     var i = 0
-    while (i < y.size) {
+    val sz = y.size
+    while (i < sz) {
       y.data(y.offset + i) = func(x.data(x.offset + i))
       i += 1
     }
@@ -518,7 +523,8 @@ object DenseTensor {
   func: (T, T) => T): Unit = {
     require(x1.size == y.size && x2.size == y.size, "Tensor sizes must be equal")
     var i = 0
-    while (i < (y.offset + y.size)) {
+    val sz = y.offset + y.size
+    while (i < sz) {
       y.data(y.offset + i) = func(x1.data(x1.offset + i), x2.data(x2.offset + i))
       i += 1
     }
@@ -686,7 +692,8 @@ object DenseTensor {
   op: (Double, Double) => Double): Unit = {
     require(a.size == b.size, "Tensors of different size")
     var i = 0
-    while (i < a.size) {
+    val sz = a.size
+    while (i < sz) {
       a.data(i) = op(a.data(i), b.data(i))
       i += 1
     }

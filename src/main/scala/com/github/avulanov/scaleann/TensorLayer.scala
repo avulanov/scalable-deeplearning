@@ -164,8 +164,11 @@ private[scaleann] class AffineLayerModel private[scaleann] (
   }
 
   override def prevDelta(nextDelta: Tensor, input: Tensor, delta: Tensor): Unit = {
+    val t = System.nanoTime()
     //BreezeUtil.dgemm(1.0, w.t, nextDelta, 0.0, delta)
     DenseTensor.gemm(1.0, w.transpose, nextDelta, 0.0, delta)
+    val tt = System.nanoTime()
+    //println("TAffine prevDelta: " + (tt - t) / 1e9)
   }
 
   override def grad(delta: Tensor, input: Tensor, cumGrad: Tensor): Unit = {
@@ -327,8 +330,14 @@ private[scaleann] class FunctionalLayerModel private[scaleann] (val layer: Funct
   override def prevDelta(nextDelta: Tensor, input: Tensor, delta: Tensor): Unit = {
 //    UniversalFunction(input, delta, layer.activationFunction.derivative)
 //    delta :*= nextDelta
+    var t1 = System.nanoTime()
     DenseTensor.applyFunction(input, delta, layer.activationFunction.derivative)
+    var t2 = System.nanoTime()
+    //println("TFunct prevDelta apply: " + (t2 - t1) / 1e9)
+    t1 = System.nanoTime()
     DenseTensor.elementwiseProduct(delta, nextDelta)
+    t2 = System.nanoTime()
+    //println("TFunct prevDelta ew: " + (t2 - t1) / 1e9)
   }
 
   override def grad(delta: Tensor, input: Tensor, cumGrad: Tensor): Unit = {}
@@ -494,7 +503,11 @@ class FeedForwardModel private(
                                 target: Tensor,
                                 cumGradient: Tensor,
                                 realBatchSize: Int): Double = {
+    var t1 = System.nanoTime()
     val outputs = forward(data)
+    var t2 = System.nanoTime()
+    //println("TForward " + (t2 - t1) / 1e9)
+    t1 = System.nanoTime()
     val currentBatchSize = data.shape(1)
     // TODO: allocate deltas as one big array and then create BDMs from it
     if (deltas == null || deltas(0).shape(1) != currentBatchSize) {
@@ -503,7 +516,7 @@ class FeedForwardModel private(
       for (i <- 0 until layerModels.length - 1) {
         val outputSize = layers(i).outputSize(inputSize)
         //deltas(i) = new BDM[Double](outputSize, currentBatchSize)
-        deltas(i) = DenseTensor(Array(outputSize, currentBatchSize))
+        deltas(i) = new Tensor(Array(outputSize, currentBatchSize))
         inputSize = outputSize
       }
     }
@@ -514,9 +527,18 @@ class FeedForwardModel private(
       case _ =>
         throw new UnsupportedOperationException("Top layer is required to have objective.")
     }
+    t2 = System.nanoTime()
+    //println("Tinit and loss " + (t2 - t1) / 1e9)
+    t1 = System.nanoTime()
     for (i <- (L - 2) to (0, -1)) {
+      val t = System.nanoTime()
       layerModels(i + 1).prevDelta(deltas(i + 1), outputs(i + 1), deltas(i))
+      val tt = System.nanoTime()
+      //println(i + "th TDelta: " + (tt - t) / 1e9)
     }
+    t2 = System.nanoTime()
+    //println("TDelta " + (t2 - t1) / 1e9)
+    t1 = System.nanoTime()
     val cumGradientArray = cumGradient.data
     var offset = 0
     for (i <- 0 until layerModels.length) {
@@ -526,6 +548,8 @@ class FeedForwardModel private(
         new Tensor(cumGradientArray, Array(layers(i).weightSize), offset))
       offset += layers(i).weightSize
     }
+    t2 = System.nanoTime()
+    //println("TGradient " + (t2 - t1) / 1e9)
     loss
   }
 

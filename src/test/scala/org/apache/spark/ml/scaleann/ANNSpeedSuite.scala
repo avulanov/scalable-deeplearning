@@ -1,7 +1,7 @@
 package org.apache.spark.ml.scaleann
 
 import org.apache.log4j.{Level, LogManager}
-import org.apache.spark.ml.classification.MultilayerPerceptronClassifier
+import org.apache.spark.ml.classification2.MultilayerPerceptronClassifier
 import org.apache.spark.ml.anntensor.{MultilayerPerceptronClassifier => TMLP}
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
 import org.apache.spark.ml.util.SparkTestContext
@@ -44,25 +44,28 @@ class ANNSpeedSuite extends FunSuite with SparkTestContext {
       .load(mnistPath + "/mnist.scale")
       .persist()
     dataFrame.count()
-    val warmUp = new MultilayerPerceptronClassifier().setLayers(Array(784, 32, 10))
+    val layers = Array(784, 150, 10)
+    val maxIter = 20
+    val tol = 1e-9
+    val warmUp = new MultilayerPerceptronClassifier().setLayers(layers)
       .setTol(10e-9)
-      .setMaxIter(2)
+      .setMaxIter(1)
       .setSeed(1234L)
       .fit(dataFrame)
     val weights = warmUp.weights
 
-    val mlp = new MultilayerPerceptronClassifier().setLayers(Array(784, 32, 10))
-      .setTol(10e-9)
-      .setMaxIter(20)
+    val mlp = new MultilayerPerceptronClassifier().setLayers(layers)
+      .setTol(tol)
+      .setMaxIter(maxIter)
       .setInitialWeights(weights.copy)
     val t = System.nanoTime()
     val model = mlp.fit(dataFrame)
     val total = System.nanoTime() - t
     println("ANN total time: " + total / 1e9 +
       " s. (should be ~37. without native BLAS with warm-up)")
-    val tensorMLP = new TMLP().setLayers(Array(784, 32, 10))
-      .setTol(10e-9)
-      .setMaxIter(20)
+    val tensorMLP = new TMLP().setLayers(layers)
+      .setTol(tol)
+      .setMaxIter(maxIter)
       .setInitialWeights(weights.copy)
     val tTensor = System.nanoTime()
     val tModel = tensorMLP.fit(dataFrame)

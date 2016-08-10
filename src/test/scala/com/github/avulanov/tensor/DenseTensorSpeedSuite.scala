@@ -18,8 +18,10 @@
 package com.github.avulanov.tensor
 
 import breeze.linalg.{DenseMatrix, sum}
+import com.github.avulanov.scaleann.AnnTypes.Tensor
 import com.github.avulanov.scaleann.My
 import org.scalatest.FunSuite
+
 
 import scala.util.Random
 
@@ -29,47 +31,36 @@ import scala.util.Random
 class DenseTensorSpeedSuite extends FunSuite {
 
   test ("ops") {
-    val max = 1025
-    val min = 1024
+    val max = 512
+    val min = 511
     var i = min
     var tBreeze = 0L
+    println("warm-up")
+    val temp = DenseMatrix.fill[Double](4, 4)(1.0)
+    val temp2 = temp * temp
+
     while (i < max) {
       println(i)
       val a = DenseMatrix.fill[Double](i, i)(Random.nextDouble())
       val b = DenseMatrix.fill[Double](i, i)(Random.nextDouble())
       val t1 = System.nanoTime()
-      val c = sum(a)//a :* b
+      val c = a * b
       tBreeze = tBreeze + (System.nanoTime() - t1)
       i = i * 2
     }
     println("Breeze: " + tBreeze / 1e9 + " s.")
-    var k = min
-    var tArray = 0L
-    val m = new My[Double]()
-    while (k < max) {
-      println(k)
-      val a = Array.fill[Double](k * k)(Random.nextDouble())
-      val b = Array.fill[Double](k * k)(Random.nextDouble())
-      val t = System.nanoTime()
-      val c = new Array[Double](k * k)
-      var p = 0
-      while (p < k * k) {
-        c(p) = m.plus(a(p), b(p))
-        p += 1
-      }
-      tArray = tArray + (System.nanoTime() - t)
-      k = k * 2
-    }
-    println("Array: " + tBreeze / 1e9 + " s.")
 
     var j = min
     var tTensor = 0L
     while (j < max) {
       println(j)
-      val x = DenseTensor.fill[Double](Array(j, j))(Random.nextDouble())
-      val y = DenseTensor.fill[Double](Array(j, j))(Random.nextDouble())
+      val ax = Array.fill[Double](j * j)(Random.nextDouble())
+      val ay = Array.fill[Double](j * j)(Random.nextDouble())
+      val x = new Tensor(ax, Array(j, j), 0)
+      val y = new Tensor(ax, Array(j, j), 0)
+      val z = new Tensor(Array(j, j))
       val t2 = System.nanoTime()
-      val z = x.sum//x :* y
+      DenseTensor.gemm(1.0, x, y, 1.0, z)
       tTensor = tTensor + (System.nanoTime() - t2)
       j = j * 2
     }
