@@ -103,14 +103,10 @@ class DenseTensor[@specialized(Double, Float) T] (
   }
 
   /**
-   * Tensor size (tensor data array might be bigger)
-    * NB! don't use this for loops
-    * TODO: replace this with val
-    *
+    * Don't use this in loops!!!
     * @return
-   */
+    */
   def size: Int = myShape.product
-
   /**
    * Shape of the tensor
     *
@@ -479,7 +475,8 @@ object DenseTensor {
     * @param func function
     * @tparam T type
     */
-  def applyFunction[T](x: DenseTensor[T], func: T => T): Unit = {
+  def applyFunction[@specialized(Double, Float) T](x: DenseTensor[T], func: T => T)
+                      (implicit m: ClassTag[T], numOps: NumberLike[T]): Unit = {
     var i = x.offset
     val sz = x.offset + x.size
     while (i < sz) {
@@ -516,11 +513,11 @@ object DenseTensor {
    * @param func function
    * @tparam T type
    */
-  def applyFunction[T](
+  def applyFunction[@specialized(Double, Float) T](
   x1: DenseTensor[T],
   x2: DenseTensor[T],
   y: DenseTensor[T],
-  func: (T, T) => T): Unit = {
+  func: (T, T) => T)(implicit m: ClassTag[T], numOps: NumberLike[T]): Unit = {
     require(x1.size == y.size && x2.size == y.size, "Tensor sizes must be equal")
     var i = 0
     val sz = y.offset + y.size
