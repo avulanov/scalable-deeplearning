@@ -21,7 +21,7 @@ import org.apache.spark.ml.anntensor.MultilayerPerceptronClassifier
 import org.apache.spark.ml.util.SparkTestContext
 import org.apache.spark.mllib.classification.LogisticRegressionWithLBFGS
 import org.apache.spark.mllib.evaluation.MulticlassMetrics
-import org.apache.spark.mllib.linalg.{Vector, Vectors}
+import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.sql.Row
 import org.scalatest.FunSuite
 
