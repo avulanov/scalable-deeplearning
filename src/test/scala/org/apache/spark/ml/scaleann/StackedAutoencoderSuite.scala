@@ -55,7 +55,7 @@ class StackedAutoencoderSuite extends FunSuite with SparkTestContext {
         .setLayers(Array(4, 3, 3))
         .setBlockSize(1)
         .setMaxIter(100)
-        .setSeed(11L)
+        .setSeed(123456789L)
         .setTol(1e-6)
         .setInputCol("input")
         .setOutputCol("output")
@@ -71,13 +71,19 @@ class StackedAutoencoderSuite extends FunSuite with SparkTestContext {
       val decodedData = saModel.decode(encodedData)
       // epsilon == 1/100 of the maximum value
       val eps = if (is01) 1.0 / 100 else 10.0 / 100
-//      decodedData.collect.foreach { case Row(input: Vector, _: Vector, decoded: Vector) =>
-//        assert(input ~== decoded absTol eps)
-//      }
+      decodedData.collect.foreach { case Row(input: Vector, _: Vector, decoded: Vector) =>
+        //assert(input ~== decoded absTol eps)
+        input.toArray.zip(decoded.toArray).foreach { x =>
+          assert(math.abs(x._1 - x._2) <= eps,
+            "Decoder should produce vectors close to the input")
+        }
+      }
     }
   }
 
   test("Autoencoder use for pre-training") {
+    val seed = 123456789L
+    val numIter = 20
     val dataFrame = spark.createDataFrame(Seq(
       (Vectors.dense(0.0, 0.0), 0.0),
       (Vectors.dense(0.0, 1.0), 1.0),
@@ -88,13 +94,13 @@ class StackedAutoencoderSuite extends FunSuite with SparkTestContext {
     val trainer = new MultilayerPerceptronClassifier()
       .setLayers(layers)
       .setBlockSize(1)
-      .setSeed(12L)
+      .setSeed(seed)
       .setMaxIter(1)
       .setTol(1e-6)
     val initialWeights = trainer.fit(dataFrame).weights
     trainer
       .setInitialWeights(initialWeights.copy)
-      .setMaxIter(10)
+      .setMaxIter(numIter)
     val badModel = trainer.fit(dataFrame)
     val badResult = badModel.transform(dataFrame)
     val badPredictionAndLabels = badResult.select("prediction", "label").collect()
@@ -111,8 +117,8 @@ class StackedAutoencoderSuite extends FunSuite with SparkTestContext {
       .setDataIn01Interval(true)
       .setInputCol("features")
       .setLayers(encoderLayers)
-      .setMaxIter(10)
-      .setSeed(12L)
+      .setMaxIter(numIter)
+      .setSeed(seed)
       .setTol(1e-6)
     val autoEncoderModel = autoEncoder.fit(dataFrame)
     val autoEncoderWeights = autoEncoderModel.encoderWeights
@@ -123,13 +129,13 @@ class StackedAutoencoderSuite extends FunSuite with SparkTestContext {
       .setLayers(layers)
       .setBlockSize(1)
       .setInitialWeights(initialWeights)
-      .setMaxIter(10)
+      .setMaxIter(numIter)
       .setTol(1e-6)
     val preModel = preTrainer.fit(dataFrame)
     val preResult = preModel.transform(dataFrame)
     val predictionAndLabels = preResult.select("prediction", "label").collect()
     predictionAndLabels.foreach { case Row(p: Double, l: Double) =>
-      assert(p == l)
+      assert(p == l, "Training after pre-training should succeed")
     }
   }
 }
