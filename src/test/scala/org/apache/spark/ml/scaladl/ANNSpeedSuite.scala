@@ -1,11 +1,8 @@
 package org.apache.spark.ml.scaladl
 
-import org.apache.log4j.{Level, LogManager}
-import org.apache.spark.ml.classification.MultilayerPerceptronClassifier
+import org.apache.spark.ml.classification.{MultilayerPerceptronClassifier => SMLP}
 import org.apache.spark.ml.scaladl.{MultilayerPerceptronClassifier => TMLP}
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
-import org.apache.spark.mllib.util.{MLUtils}
-import org.apache.spark.sql.SQLContext
 import org.scalatest.FunSuite
 
 import scaladl.util.SparkTestContext
@@ -48,14 +45,14 @@ class ANNSpeedSuite extends FunSuite with SparkTestContext {
     val layers = Array(784, 150, 10)
     val maxIter = 20
     val tol = 1e-9
-    val warmUp = new MultilayerPerceptronClassifier().setLayers(layers)
+    val warmUp = new SMLP().setLayers(layers)
       .setTol(10e-9)
       .setMaxIter(1)
       .setSeed(1234L)
       .fit(dataFrame)
     val weights = warmUp.weights
 
-    val mlp = new MultilayerPerceptronClassifier().setLayers(layers)
+    val mlp = new SMLP().setLayers(layers)
       .setTol(tol)
       .setMaxIter(maxIter)
       .setInitialWeights(weights.copy)

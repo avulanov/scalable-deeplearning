@@ -22,11 +22,8 @@ import java.util.Random
 import scaladl.optimization._
 import scaladl.tensor.DenseTensor
 
-//import breeze.linalg.{*, DenseMatrix => BDM, DenseVector => BDV, Vector => BV, axpy => Baxpy}
-//import org.apache.spark.ml.ann.BreezeUtil
-import org.apache.spark.ml.linalg.{BLAS, Vector, Vectors}
+import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.util.random.XORShiftRandom
 
 object AnnTypes {
   type Tensor = DenseTensor[Double]

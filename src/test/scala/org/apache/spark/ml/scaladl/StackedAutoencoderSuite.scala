@@ -17,7 +17,6 @@
 
 package org.apache.spark.ml.scaladl
 
-import org.apache.spark.ml.scaladl.{MultilayerPerceptronClassifier, StackedAutoencoder}
 import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.sql.Row
 import org.scalatest.FunSuite

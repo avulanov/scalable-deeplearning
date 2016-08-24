@@ -22,7 +22,6 @@ import AnnTypes.Tensor
 import org.apache.log4j.{Level, LogManager}
 
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 import org.apache.spark.ml.linalg.Vector
 
 

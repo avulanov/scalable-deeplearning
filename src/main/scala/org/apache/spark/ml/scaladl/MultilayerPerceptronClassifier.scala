@@ -100,12 +100,10 @@ private[ml] trait MultilayerPerceptronParams extends PredictorParams
     *
     * @group expertParam
     */
-  @Since("2.0.0")
   final val initialWeights: Param[Vector] = new Param[Vector](this, "initialWeights",
     "The initial weights of the model")
 
   /** @group expertGetParam */
-  @Since("2.0.0")
   final def getInitialWeights: Vector = $(initialWeights)
 
   setDefault(maxIter -> 100, tol -> 1e-6, layers -> Array(1, 1), blockSize -> 128,
@@ -150,22 +148,16 @@ private object LabelConverter {
   * Number of outputs has to be equal to the total number of labels.
   *
   */
-@Since("1.5.0")
-@Experimental
-class MultilayerPerceptronClassifier @Since("1.5.0") (
-                                                       @Since("1.5.0") override val uid: String)
+class MultilayerPerceptronClassifier (override val uid: String)
   extends Predictor[Vector, MultilayerPerceptronClassifier, MultilayerPerceptronClassificationModel]
     with MultilayerPerceptronParams {
 
-  @Since("1.5.0")
-  def this() = this(Identifiable.randomUID("mlpc"))
+  def this() = this(Identifiable.randomUID("mlpc-scaladl"))
 
   /** @group setParam */
-  @Since("1.5.0")
   def setLayers(value: Array[Int]): this.type = set(layers, value)
 
   /** @group setParam */
-  @Since("1.5.0")
   def setBlockSize(value: Int): this.type = set(blockSize, value)
 
   /**
@@ -174,7 +166,6 @@ class MultilayerPerceptronClassifier @Since("1.5.0") (
     *
     * @group setParam
     */
-  @Since("1.5.0")
   def setMaxIter(value: Int): this.type = set(maxIter, value)
 
   /**
@@ -184,7 +175,6 @@ class MultilayerPerceptronClassifier @Since("1.5.0") (
     *
     * @group setParam
     */
-  @Since("1.5.0")
   def setTol(value: Double): this.type = set(tol, value)
 
   /**
@@ -192,7 +182,6 @@ class MultilayerPerceptronClassifier @Since("1.5.0") (
     *
     * @group setParam
     */
-  @Since("1.5.0")
   def setSeed(value: Long): this.type = set(seed, value)
 
   /**
@@ -200,19 +189,16 @@ class MultilayerPerceptronClassifier @Since("1.5.0") (
     *
     * @group expertSetParam
     */
-  @Since("2.0.0")
   def setInitialWeights(value: Vector): this.type = set(initialWeights, value)
 
   /**
     * Generate weights.
     */
-  @Since("2.0.0")
   def generateWeights(): Vector = {
     val topology = FeedForwardTopology.multiLayerPerceptron($(layers), true)
     topology.model($(seed)).weights
   }
 
-  @Since("1.5.0")
   override def copy(extra: ParamMap): MultilayerPerceptronClassifier = defaultCopy(extra)
 
   /**
@@ -254,16 +240,12 @@ class MultilayerPerceptronClassifier @Since("1.5.0") (
   * @param weights vector of initial weights for the model that consists of the weights of layers
   * @return prediction model
   */
-@Since("1.5.0")
-@Experimental
-class MultilayerPerceptronClassificationModel private[ml] (
-                                                            @Since("1.5.0") override val uid: String,
-                                                            @Since("1.5.0") val layers: Array[Int],
-                                                            @Since("1.5.0") val weights: Vector)
+class MultilayerPerceptronClassificationModel private[ml] (override val uid: String,
+                                                           val layers: Array[Int],
+                                                           val weights: Vector)
   extends PredictionModel[Vector, MultilayerPerceptronClassificationModel]
     with Serializable {
 
-  @Since("1.6.0")
   override val numFeatures: Int = layers.head
 
   private val mlpModel = FeedForwardTopology.multiLayerPerceptron(layers, true).model(weights)
@@ -283,7 +265,6 @@ class MultilayerPerceptronClassificationModel private[ml] (
     LabelConverter.decodeLabel(mlpModel.predict(features))
   }
 
-  @Since("1.5.0")
   override def copy(extra: ParamMap): MultilayerPerceptronClassificationModel = {
     copyValues(new MultilayerPerceptronClassificationModel(uid, layers, weights), extra)
   }

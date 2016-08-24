@@ -23,7 +23,7 @@ import org.scalatest.FunSuite
 
 import scaladl.util.SparkTestContext
 
-class MLPSuite extends FunSuite with SparkTestContext {
+class MultilayerPerceptronClassifierSuite extends FunSuite with SparkTestContext {
 
   test("XOR function learning as binary classification problem with two outputs.") {
     val dataFrame = spark.createDataFrame(Seq(

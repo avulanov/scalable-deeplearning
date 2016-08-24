@@ -23,7 +23,7 @@ import org.scalatest.FunSuite
 import scaladl.util.SparkTestContext
 
 
-class ANNSuite extends FunSuite with SparkTestContext {
+class LayerSuite extends FunSuite with SparkTestContext {
 
   // TODO: test for weights comparison with Weka MLP
   test("ANN with Sigmoid learns XOR function with LBFGS optimizer") {

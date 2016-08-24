@@ -19,9 +19,8 @@ package scaladl.optimization
 
 import scaladl.layers.AnnTypes
 import AnnTypes.Tensor
-import org.apache.log4j.{Level, LogManager}
 import org.apache.spark.annotation.DeveloperApi
-import org.apache.spark.ml.linalg.{DenseVector, Vector, Vectors}
+import org.apache.spark.ml.linalg.Vector
 
 import scaladl.tensor.DenseTensor
 

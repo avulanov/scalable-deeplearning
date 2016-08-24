@@ -17,10 +17,8 @@
 
 package scaladl.tensor
 
-import breeze.linalg.{Tensor, DenseMatrix => BDM}
 import org.scalatest.FunSuite
 
-import scala.collection.Set
 import scaladl.util.SparkTestContext
 
 class DenseTensorSuite  extends FunSuite with SparkTestContext {

@@ -21,10 +21,8 @@ import java.util.Random
 
 import scaladl.tensor.DenseTensor
 
-//import breeze.linalg.{DenseMatrix => BDM, DenseVector => BDV, sum => Bsum}
-//import breeze.numerics.{log => Blog}
-
 import AnnTypes._
+
 /**
   * Trait for loss function
   */
