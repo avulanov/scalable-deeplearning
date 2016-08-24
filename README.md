@@ -1,2 +1,2 @@
-# scalable-ann
-Scalable implementation of artificial neural networks for Spark deep learning
+# scalable-deeplearning
+A Scalable Implementation of Deep Learning on Spark
