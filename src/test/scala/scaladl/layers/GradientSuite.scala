@@ -17,13 +17,12 @@
 
 package scaladl.layers
 
-import org.apache.spark.ml.linalg.Vectors
-
-import AnnTypes._
 import org.scalatest.FunSuite
-
+import scaladl.layers.AnnTypes._
 import scaladl.tensor.DenseTensor
 import scaladl.util.SparkTestContext
+
+import org.apache.spark.ml.linalg.Vectors
 
 class GradientSuite extends FunSuite with SparkTestContext {
 
@@ -49,7 +48,7 @@ class GradientSuite extends FunSuite with SparkTestContext {
       val model = topology.model(seed = 12L)
       val weights = model.weights.toArray
       val numWeights = weights.size
-      val gradient = new Tensor(Array(numWeights))//Vectors.dense(Array.fill[Double](numWeights)(0.0))
+      val gradient = new Tensor(Array(numWeights))
       val loss = model.computeGradient(input, target, gradient, 1)
       val eps = 1e-4
       var i = 0
@@ -60,8 +59,8 @@ class GradientSuite extends FunSuite with SparkTestContext {
         val newModel = topology.model(Vectors.dense(weights))
         val newLoss = computeLoss(input, target, newModel)
         val derivativeEstimate = (newLoss - loss) / eps
-        assert(math.abs(gradient.value(i) - derivativeEstimate) < tol, "Layer failed gradient check: " +
-          layerWithError.getClass)
+        assert(math.abs(gradient.value(i) - derivativeEstimate) < tol,
+          "Layer failed gradient check: " + layerWithError.getClass)
         weights(i) = originalValue
         i += 1
       }

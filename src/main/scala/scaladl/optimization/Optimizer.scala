@@ -17,10 +17,9 @@
 
 package scaladl.optimization
 
-//import org.apache.spark.annotation.DeveloperApi
+import scaladl.layers.AnnTypes.Tensor
+
 import org.apache.spark.ml.linalg.Vector
-import scaladl.layers.AnnTypes
-import AnnTypes.Tensor
 import org.apache.spark.rdd.RDD
 
 trait Optimizer extends Serializable {

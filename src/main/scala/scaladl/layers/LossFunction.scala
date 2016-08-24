@@ -19,22 +19,21 @@ package scaladl.layers
 
 import java.util.Random
 
+import scaladl.layers.AnnTypes._
 import scaladl.tensor.DenseTensor
 
-import AnnTypes._
-
 /**
-  * Trait for loss function
-  */
+ * Trait for loss function
+ */
 private[layers] trait LossFunction {
   /**
-    * Loss function
-    *
-    * @param output actual output
-    * @param target target output
-    * @param delta output delta to write to
-    * @return
-    */
+   * Loss function
+   *
+   * @param output actual output
+   * @param target target output
+   * @param delta output delta to write to
+   * @return
+   */
   def loss(output: Tensor, target: Tensor, delta: Tensor): Double
 }
 
@@ -50,9 +49,6 @@ class SigmoidLayerWithSquaredError extends Layer {
 private[layers] class SigmoidLayerModelWithSquaredError
   extends FunctionalLayerModel(new FunctionalLayer(new SigmoidFunction)) with LossFunction {
   override def loss(output: Tensor, target: Tensor, delta: Tensor): Double = {
-    //anntensor.UniversalFunction(output, target, delta, (o: Double, t: Double) => o - t)
-//    val error = Bsum(delta :* delta) / 2 / output.cols
-//    anntensor.UniversalFunction(delta, output, delta, (x: Double, o: Double) => x * (o - o * o))
     DenseTensor.applyFunction(output, target, delta, (o: Double, t: Double) => o - t)
     val error = (delta :* delta).sum / 2 / output.shape(1)
     DenseTensor.applyFunction(delta, output, delta, (x: Double, o: Double) => x * (o - o * o))
@@ -118,15 +114,10 @@ private[layers] class SoftmaxLayerModelWithCrossEntropyLoss extends LayerModel w
   override def grad(delta: Tensor, input: Tensor, cumGrad: Tensor): Unit = {}
 
   override def loss(output: Tensor, target: Tensor, delta: Tensor): Double = {
-//    if (epsilonMatrix == null || epsilonMatrix.cols != target.cols) {
-//      epsilonMatrix = BDM.fill[Double](target.rows, target.cols)(epsilon)
-//    }
-    //anntensor.UniversalFunction(output, target, delta, (o: Double, t: Double) => o - t)
     if (epsilonMatrix == null || epsilonMatrix.shape(1) != target.shape(1)) {
       epsilonMatrix = DenseTensor.fill(target.shape)(epsilon)
     }
     DenseTensor.applyFunction(output, target, delta, (o: Double, t: Double) => o - t)
-    //-Bsum( target :* Blog(output + epsilonMatrix)) / output.cols
     val temp = output + epsilonMatrix
     DenseTensor.applyFunction(temp, Math.log)
     -(target :* temp).sum / output.shape(1)
@@ -184,8 +175,6 @@ private[layers] class SigmoidLayerModelWithCrossEntropyLoss
     DenseTensor.applyFunction(output, target, delta, (o: Double, t: Double) => o - t)
     // NB: operation :* don't have execution priority over summation
     // TODO: is adding epsilon a good way to fight log(o) ?
-//    -Bsum((target :* Blog(output + epsilonMatrix)) +
-//      ((oneMatrix - target) :* Blog(oneMatrix - output + epsilonMatrix))) / output.cols
     val temp1 = output + epsilonMatrix;
     DenseTensor.applyFunction(temp1, Math.log)
     val temp2 = oneMatrix - output + epsilonMatrix

@@ -17,20 +17,18 @@
 
 package scaladl.optimization
 
-import scaladl.layers.AnnTypes
-import AnnTypes.Tensor
-import org.apache.log4j.{Level, LogManager}
-
 import scala.collection.mutable
-import org.apache.spark.ml.linalg.Vector
-
 
 import breeze.linalg.{DenseVector => BDV}
 import breeze.optimize.{CachedDiffFunction, DiffFunction, LBFGS => BreezeLBFGS}
+import scaladl.layers.AnnTypes.Tensor
+import scaladl.tensor.DenseTensor
 
+import org.apache.log4j.{Level, LogManager}
+
+import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.rdd.RDD
 
-import scaladl.tensor.DenseTensor
 
 class LBFGS(private var gradient: Gradient, private var updater: Updater)
   extends Optimizer {
@@ -216,7 +214,7 @@ object LBFGS {
       state = states.next()
     }
     lossHistory += state.value
-    val weights = new Tensor(state.x.data, Array(state.x.data.length), 0) // Vectors.fromBreeze(state.x)
+    val weights = new Tensor(state.x.data, Array(state.x.data.length), 0)
 
     val lossHistoryArray = lossHistory.result()
 
@@ -251,7 +249,6 @@ object LBFGS {
             (grad, loss + l)
           },
           combOp = (c1, c2) => (c1, c2) match { case ((grad1, loss1), (grad2, loss2)) =>
-            //axpy(1.0, grad2, grad1)
             DenseTensor.axpy(1, grad2, grad1)
             (grad1, loss1 + loss2)
           })
@@ -281,7 +278,8 @@ object LBFGS {
       // The following gradientTotal is actually the regularization part of gradient.
       // Will add the gradientSum computed from the data with weights in the next step.
       val gradientTotal = w.copy()
-      DenseTensor.axpy(-1.0, updater.compute(w, new Tensor(Array(n)), 1, 1, regParam)._1, gradientTotal)
+      DenseTensor.axpy(-1.0,
+        updater.compute(w, new Tensor(Array(n)), 1, 1, regParam)._1, gradientTotal)
 
       // gradientTotal = gradientSum / numExamples + gradientTotal
       DenseTensor.axpy(1.0 / numExamples, gradientSum, gradientTotal)

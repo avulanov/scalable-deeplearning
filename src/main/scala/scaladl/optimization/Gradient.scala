@@ -17,15 +17,10 @@
 
 package scaladl.optimization
 
-import scaladl.layers.AnnTypes
-import AnnTypes.Tensor
+import scaladl.layers.AnnTypes.Tensor
+
 import org.apache.spark.annotation.DeveloperApi
 import org.apache.spark.ml.linalg.Vector
-
-import scaladl.tensor.DenseTensor
-
-//import org.apache.spark.mllib.linalg.BLAS.{axpy, dot, scal}
-//import org.apache.spark.mllib.util.MLUtils
 
 /**
  * :: DeveloperApi ::

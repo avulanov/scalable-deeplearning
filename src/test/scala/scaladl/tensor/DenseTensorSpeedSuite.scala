@@ -17,14 +17,11 @@
 
 package scaladl.tensor
 
+import scala.util.Random
+
 import breeze.linalg.{DenseMatrix, sum}
 import org.scalatest.FunSuite
 
-import scala.util.Random
-
-/**
-  * Created by ulanov on 3/14/2016.
-  */
 class DenseTensorSpeedSuite extends FunSuite {
 
   test ("ops") {
@@ -33,20 +30,20 @@ class DenseTensorSpeedSuite extends FunSuite {
     var i = min
     var tBreeze = 0L
     while (i < max) {
-      println(i)
+      // println(i)
       val a = DenseMatrix.fill[Double](i, i)(Random.nextDouble())
       val b = DenseMatrix.fill[Double](i, i)(Random.nextDouble())
       val t1 = System.nanoTime()
-      val c = sum(a)//a :* b
+      val c = sum(a) // a :* b
       tBreeze = tBreeze + (System.nanoTime() - t1)
       i = i * 2
     }
-    println("Breeze: " + tBreeze / 1e9 + " s.")
+    // println("Breeze: " + tBreeze / 1e9 + " s.")
     var k = min
     var tArray = 0L
     val m = new My[Double]()
     while (k < max) {
-      println(k)
+      // println(k)
       val a = Array.fill[Double](k * k)(Random.nextDouble())
       val b = Array.fill[Double](k * k)(Random.nextDouble())
       val t = System.nanoTime()
@@ -59,19 +56,19 @@ class DenseTensorSpeedSuite extends FunSuite {
       tArray = tArray + (System.nanoTime() - t)
       k = k * 2
     }
-    println("Array: " + tBreeze / 1e9 + " s.")
+    // println("Array: " + tBreeze / 1e9 + " s.")
 
     var j = min
     var tTensor = 0L
     while (j < max) {
-      println(j)
+      // println(j)
       val x = DenseTensor.fill[Double](Array(j, j))(Random.nextDouble())
       val y = DenseTensor.fill[Double](Array(j, j))(Random.nextDouble())
       val t2 = System.nanoTime()
-      val z = x.sum//x :* y
+      val z = x.sum // x :* y
       tTensor = tTensor + (System.nanoTime() - t2)
       j = j * 2
     }
-    println("DT: " + tTensor / 1e9 + " s.")
+    // println("DT: " + tTensor / 1e9 + " s.")
   }
 }

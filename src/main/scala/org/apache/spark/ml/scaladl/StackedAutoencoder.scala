@@ -18,9 +18,11 @@
 package org.apache.spark.ml.scaladl
 
 import breeze.linalg.{DenseVector => BDV}
+import scaladl.layers.{EmptyLayerWithSquaredError, FeedForwardTopology, FeedForwardTrainer}
+
 import org.apache.spark.annotation.Experimental
 import org.apache.spark.ml.{Estimator, Model}
-import org.apache.spark.ml.linalg.{Vector, VectorUDT, Vectors}
+import org.apache.spark.ml.linalg.{Vector, Vectors, VectorUDT}
 import org.apache.spark.ml.param.{BooleanParam, ParamMap, Params}
 import org.apache.spark.ml.param.shared.{HasInputCol, HasOutputCol}
 import org.apache.spark.ml.util.Identifiable
@@ -28,8 +30,6 @@ import org.apache.spark.sql.{DataFrame, Dataset, Row}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{StructField, StructType}
 import org.apache.spark.storage.StorageLevel
-
-import scaladl.layers.{FeedForwardTrainer, FeedForwardTopology, EmptyLayerWithSquaredError}
 
 /**
  * Params for [[StackedAutoencoder]].

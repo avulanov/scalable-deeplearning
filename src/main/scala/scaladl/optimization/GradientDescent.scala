@@ -17,20 +17,15 @@
 
 package scaladl.optimization
 
-import scaladl.layers.AnnTypes
-import AnnTypes.Tensor
-import org.apache.log4j.{Level, LogManager}
-
 import scala.collection.mutable.ArrayBuffer
 
-import breeze.linalg.{norm, DenseVector => BDV}
-
-import org.apache.spark.annotation.{DeveloperApi, Experimental}
-import org.apache.spark.ml.linalg.{Vector, Vectors}
-import org.apache.spark.rdd.RDD
-
+import scaladl.layers.AnnTypes.Tensor
 import scaladl.tensor.DenseTensor
 
+import org.apache.log4j.{Level, LogManager}
+
+import org.apache.spark.ml.linalg.Vector
+import org.apache.spark.rdd.RDD
 
 /**
  * Class used to solve an optimization problem using Gradient Descent.
@@ -57,11 +52,9 @@ class GradientDescent (private var gradient: Gradient, private var updater: Upda
   }
 
   /**
-   * :: Experimental ::
    * Set fraction of data to be used for each SGD iteration.
    * Default 1.0 (corresponding to deterministic/classical gradient descent)
    */
-  @Experimental
   def setMiniBatchFraction(fraction: Double): this.type = {
     this.miniBatchFraction = fraction
     this
@@ -123,14 +116,12 @@ class GradientDescent (private var gradient: Gradient, private var updater: Upda
   }
 
   /**
-   * :: DeveloperApi ::
    * Runs gradient descent on the given training data.
  *
    * @param data training data
    * @param initialWeights initial weights
    * @return solution vector
    */
-  @DeveloperApi
   def optimize(data: RDD[(Double, Vector)], initialWeights: Tensor): Tensor = {
     val (weights, _) = GradientDescent.runMiniBatchSGD(
       data,
@@ -151,7 +142,6 @@ class GradientDescent (private var gradient: Gradient, private var updater: Upda
  * :: DeveloperApi ::
  * Top-level method to run gradient descent.
  */
-@DeveloperApi
 object GradientDescent {
   /**
    * Run stochastic gradient descent (SGD) in parallel using mini batches.
@@ -223,7 +213,6 @@ object GradientDescent {
     }
 
     // Initialize weights as a column vector
-    //var weights = Vectors.dense(initialWeights.toArray)
     var weights = initialWeights
     val n = weights.size
 
@@ -249,7 +238,6 @@ object GradientDescent {
           },
           combOp = (c1, c2) => {
             // c: (grad, loss, count)
-            //(c1._1 += c2._1, c1._2 + c2._2, c1._3 + c2._3)
             DenseTensor.axpy(1, c2._1, c1._1)
             (c1._1, c1._2 + c2._2, c1._3 + c2._3)
           })
@@ -262,7 +250,7 @@ object GradientDescent {
         stochasticLossHistory.append(lossSum / miniBatchSize + regVal)
         DenseTensor.scal(miniBatchSize.toDouble, gradientSum)
         val update = updater.compute(
-          weights, gradientSum, //Vectors.fromBreeze(gradientSum / miniBatchSize.toDouble),
+          weights, gradientSum,
           stepSize, i, regParam)
         weights = update._1
         regVal = update._2
@@ -307,10 +295,6 @@ object GradientDescent {
       previousWeights: Tensor,
       currentWeights: Tensor,
       convergenceTol: Double): Boolean = {
-    // To compare with convergence tolerance.
-//    val previousBDV = previousWeights.toBreeze.toDenseVector
-//    val currentBDV = currentWeights.toBreeze.toDenseVector
-
     // This represents the difference of updated weights in the iteration.
     val solutionVecDiff: Double = (previousWeights - currentWeights).norm
 

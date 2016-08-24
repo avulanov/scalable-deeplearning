@@ -1,11 +1,28 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.spark.ml.scaladl
 
-import org.apache.spark.ml.classification.{MultilayerPerceptronClassifier => SMLP}
-import org.apache.spark.ml.scaladl.{MultilayerPerceptronClassifier => TMLP}
-import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
 import org.scalatest.FunSuite
-
 import scaladl.util.SparkTestContext
+
+import org.apache.spark.ml.classification.{MultilayerPerceptronClassifier => SMLP}
+import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
+import org.apache.spark.ml.scaladl.{MultilayerPerceptronClassifier => TMLP}
 
 class ANNSpeedSuite extends FunSuite with SparkTestContext {
 
@@ -34,7 +51,7 @@ class ANNSpeedSuite extends FunSuite with SparkTestContext {
 
   test ("speed test with tensor") {
     val mnistPath = System.getenv("MNIST_HOME")
-    println(mnistPath + "/mnist.scale")
+    // println(mnistPath + "/mnist.scale")
     val dataFrame = spark
       .read
       .format("libsvm")
@@ -69,7 +86,7 @@ class ANNSpeedSuite extends FunSuite with SparkTestContext {
     val tModel = tensorMLP.fit(dataFrame)
     val totalTensor = System.nanoTime() - tTensor
     println("Tensor total time: " + totalTensor / 1e9 +
-      " s. (should be ~37s. without native BLAS with warm-up)")
+     " s. (should be ~37s. without native BLAS with warm-up)")
 
     val test = spark
       .read
@@ -86,7 +103,5 @@ class ANNSpeedSuite extends FunSuite with SparkTestContext {
     val tpl = tResult.select("prediction", "label")
     val tev = new MulticlassClassificationEvaluator().setMetricName("accuracy")
     println("Tensor Accuracy: " + tev.evaluate(tpl))
-
   }
-
 }

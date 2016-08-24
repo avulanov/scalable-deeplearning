@@ -17,11 +17,12 @@
 
 package org.apache.spark.ml.scaladl
 
+import scaladl.util.SparkTestContext
+
 import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.sql.Row
-import org.scalatest.FunSuite
 
-import scaladl.util.SparkTestContext
+import org.scalatest.FunSuite
 
 class StackedAutoencoderSuite extends FunSuite with SparkTestContext {
 

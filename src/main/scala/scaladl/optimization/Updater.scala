@@ -31,7 +31,7 @@ abstract class Updater extends Serializable {
    * @param stepSize - step size across iterations
    * @param iter - Iteration number
    * @param regParam - Regularization parameter
-    * @return A tuple of 2 elements. The first element is a column matrix containing updated weights,
+   * @return A tuple of 2 elements. The first element is a column matrix containing updated weights,
    *         and the second element is the regularization value computed using updated weights.
    */
   def compute(

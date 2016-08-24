@@ -17,6 +17,8 @@
 
 package scaladl.tensor
 
+import scaladl.tensor.Math.NumberLike
+
 object Math {
   trait NumberLike[@specialized (Double, Int) T] {
     def plus(x: T, y: T): T
@@ -36,7 +38,7 @@ object Statistics {
     ev.plus(x, y)
   def plusDouble(x: Double, y: Double): Double = x + y
 }
-import scaladl.tensor.Math.NumberLike
+
 class My[@specialized (Double, Int) T](implicit ev: NumberLike[T]) {
   def plus(x: T, y: T): T = ev.plus(x, y)
 }

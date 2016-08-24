@@ -92,7 +92,7 @@ class DenseTensorSuite  extends FunSuite with SparkTestContext {
     val y = DenseTensor[Double](Array[Double](1, 2, 3, 4, 5, 6), Array(2, 3))
     val z = x + y
     val trueZ = DenseTensor[Double](Array[Double](2, 4, 6, 8, 10, 12), Array(2, 3))
-    assert(z.equals(trueZ), "Transposed, shape or data differs")
+    assert(z.isEqual(trueZ), "Transposed, shape or data differs")
   }
 
   test ("plus float") {
@@ -100,7 +100,7 @@ class DenseTensorSuite  extends FunSuite with SparkTestContext {
     val y = DenseTensor[Float](Array[Float](1, 2, 3, 4, 5, 6), Array(2, 3))
     val z = x + y
     val trueZ = DenseTensor[Float](Array[Float](2, 4, 6, 8, 10, 12), Array(2, 3))
-    assert(z.equals(trueZ), "Transposed, shape or data differs")
+    assert(z.isEqual(trueZ), "Transposed, shape or data differs")
   }
 
   test ("minus double") {
@@ -108,7 +108,7 @@ class DenseTensorSuite  extends FunSuite with SparkTestContext {
     val y = DenseTensor[Double](Array[Double](1, 2, 3, 4, 5, 6), Array(2, 3))
     val z = x - y
     val trueZ = DenseTensor[Double](Array[Double](1, 2, 3, 4, 5, 6), Array(2, 3))
-    assert(z.equals(trueZ), "Transposed, shape or data differs")
+    assert(z.isEqual(trueZ), "Transposed, shape or data differs")
   }
 
   test ("minus float") {
@@ -116,7 +116,7 @@ class DenseTensorSuite  extends FunSuite with SparkTestContext {
     val y = DenseTensor[Float](Array[Float](1, 2, 3, 4, 5, 6), Array(2, 3))
     val z = x - y
     val trueZ = DenseTensor[Float](Array[Float](1, 2, 3, 4, 5, 6), Array(2, 3))
-    assert(z.equals(trueZ), "Transposed, shape or data differs")
+    assert(z.isEqual(trueZ), "Transposed, shape or data differs")
   }
 
   test ("elementwise product double") {
@@ -124,7 +124,7 @@ class DenseTensorSuite  extends FunSuite with SparkTestContext {
     val y = DenseTensor[Double](Array[Double](1, 2, 3, 4, 5, 6), Array(2, 3))
     val z = x :* y
     val trueZ = DenseTensor[Double](Array[Double](1, 4, 9, 16, 25, 36), Array(2, 3))
-    assert(z.equals(trueZ), "Transposed, shape or data differs")
+    assert(z.isEqual(trueZ), "Transposed, shape or data differs")
   }
 
   test ("elementwise product float") {
@@ -132,7 +132,7 @@ class DenseTensorSuite  extends FunSuite with SparkTestContext {
     val y = DenseTensor[Float](Array[Float](1, 2, 3, 4, 5, 6), Array(2, 3))
     val z = x :* y
     val trueZ = DenseTensor[Float](Array[Float](1, 4, 9, 16, 25, 36), Array(2, 3))
-    assert(z.equals(trueZ), "Transposed, shape or data differs")
+    assert(z.isEqual(trueZ), "Transposed, shape or data differs")
   }
 
   test ("sum double") {

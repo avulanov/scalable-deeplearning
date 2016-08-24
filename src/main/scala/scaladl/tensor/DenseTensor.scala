@@ -17,8 +17,6 @@
 
 package scaladl.tensor
 
-import breeze.linalg.{DenseVector, DenseMatrix}
-
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 
@@ -47,6 +45,7 @@ object Algebra {
   }
 }
   import Algebra.NumberLike
+
 /**
  * Dense tensor column-major representation. // TODO: row major??
  *
@@ -82,42 +81,43 @@ class DenseTensor[@specialized(Double, Float) T] (
   private var myShape = tensorShape
 
   /**
-    * Allocate new tensor
-    * @param tensorShape tensor shape
-    * @param m type parameter
-    * @param numOps ops parameter
-    */
+   * Allocate new tensor
+   * @param tensorShape tensor shape
+   * @param m type parameter
+   * @param numOps ops parameter
+   */
   def this(tensorShape: Array[Int])(implicit m: ClassTag[T], numOps: NumberLike[T]) = {
     this(new Array[T](tensorShape.product), tensorShape, 0)
   }
 
   /**
-    * New tensor given data and shape
-    * @param data data array
-    * @param tensorShape shape
-    * @param m type
-    * @param numOps ops
-    */
-  def this(data: Array[T], tensorShape: Array[Int])(implicit m: ClassTag[T], numOps: NumberLike[T]) = {
+   * New tensor given data and shape
+   * @param data data array
+   * @param tensorShape shape
+   * @param m type
+   * @param numOps ops
+   */
+  def this(data: Array[T], tensorShape: Array[Int])
+          (implicit m: ClassTag[T], numOps: NumberLike[T]) = {
     this(data, tensorShape, 0, false)
   }
 
   /**
-    * Don't use this in loops!!!
-    * @return
-    */
+   * Don't use this in loops!!!
+   * @return
+   */
   def size: Int = myShape.product
   /**
    * Shape of the tensor
-    *
-    * @return shape
+   *
+   * @return shape
    */
   def shape: Array[Int] = myShape
 
   /**
    * Reshape the tensor. Supports reshaping within the same data size
-    *
-    * @param newShape new shape
+   *
+   * @param newShape new shape
    * @return reshaped tensor backed by the same data
    */
   def reshape(newShape: Array[Int]): DenseTensor[T] = {
@@ -128,32 +128,32 @@ class DenseTensor[@specialized(Double, Float) T] (
   }
 
   /**
-    * Update value of a Tensor
-    *
-    * @param index index
-    * @param value value
-    */
+   * Update value of a Tensor
+   *
+   * @param index index
+   * @param value value
+   */
   def update(index: Int, value: T): Unit = {
     require(index >=0 && index < requiredSize)
-    data(this.offset + index)  = value
+    data(this.offset + index) = value
   }
 
   /**
-    * Update value of a Tensor
-    *
-    * @param index index
-    * @param value value
-    */
+   * Update value of a Tensor
+   *
+   * @param index index
+   * @param value value
+   */
   def update(index: Array[Int], value: T): Unit = {
     data(offset(index)) = value
   }
 
   /**
-    * Get the value at position index
-    *
-    * @param index index
-    * @return value
-    */
+   * Get the value at position index
+   *
+   * @param index index
+   * @return value
+   */
   def value(index: Int): T = {
     require(index >=0 && index < requiredSize)
     data(this.offset + index)
@@ -161,8 +161,8 @@ class DenseTensor[@specialized(Double, Float) T] (
 
   /**
    * Get the value at position index
-    *
-    * @param index index
+   *
+   * @param index index
    * @return value
    */
   def value(index: Array[Int]): T = {
@@ -179,16 +179,16 @@ class DenseTensor[@specialized(Double, Float) T] (
 
   /**
    * Check if tensor is transposed
-    *
-    * @return true if transposed, false otherwise
+   *
+   * @return true if transposed, false otherwise
    */
   def transposed: Boolean = isTransposed
 
   /**
    * Transpose tensor. Does not actually transpose the data.
    * It is used for operations such as gemm.
-    *
-    * @return self
+   *
+   * @return self
    */
   def transpose(implicit m: ClassTag[T]): DenseTensor[T] = {
     require(tensorShape.length == 2, "Transpose is valid only for 2 dimensional tensor")
@@ -198,8 +198,8 @@ class DenseTensor[@specialized(Double, Float) T] (
 
   /**
    * Slice the tensor by the last dimension
-    *
-    * @param from index
+   *
+   * @param from index
    * @param until index
    * @return tensor backed by the same data
    */
@@ -214,8 +214,8 @@ class DenseTensor[@specialized(Double, Float) T] (
 
   /**
    * Slice the tensor by one index in the last dimension
-    *
-    * @param index index
+   *
+   * @param index index
    * @return squeezed tensor
    */
   def slice(index: Int): DenseTensor[T] = {
@@ -224,8 +224,8 @@ class DenseTensor[@specialized(Double, Float) T] (
 
   /**
    * Squeze the dimensions of size 1
-    *
-    * @return tensor backed by the same data
+   *
+   * @return tensor backed by the same data
    */
   def squeeze(): DenseTensor[T] = {
     val buf = new ArrayBuffer[Int](myShape.length)
@@ -238,8 +238,8 @@ class DenseTensor[@specialized(Double, Float) T] (
 
   /**
    * Copy the underlying data
-    *
-    * @param m ClassTag
+   *
+   * @param m ClassTag
    * @return data array
    */
   def copyData()(implicit m: ClassTag[T]): Array[T] = {
@@ -256,8 +256,8 @@ class DenseTensor[@specialized(Double, Float) T] (
 
   /**
    * Fill tensor with the data from the other tensor
-    *
-    * @param donor tensor from which to get data
+   *
+   * @param donor tensor from which to get data
    * @return self
    */
   def fillWith(donor: DenseTensor[T]): DenseTensor[T] = {
@@ -276,11 +276,11 @@ class DenseTensor[@specialized(Double, Float) T] (
   }
 
   /**
-    * Plus operation
-    * @param other other tensor
-    * @param m type parameter
-    * @return returns new tensor
-    */
+   * Plus operation
+   * @param other other tensor
+   * @param m type parameter
+   * @return returns new tensor
+   */
   def +(other: DenseTensor[T])(implicit m: ClassTag[T]): DenseTensor[T] = {
     require(equalShape(other), "Must be equal shape")
     val sz = size
@@ -298,11 +298,11 @@ class DenseTensor[@specialized(Double, Float) T] (
   }
 
   /**
-    * Minus operation
-    * @param other other tensor
-    * @param m type parameter
-    * @return returns new tensor
-    */
+   * Minus operation
+   * @param other other tensor
+   * @param m type parameter
+   * @return returns new tensor
+   */
   def -(other: DenseTensor[T])(implicit m: ClassTag[T]): DenseTensor[T] = {
     require(equalShape(other), "Must be equal shape")
     val sz = size
@@ -316,11 +316,11 @@ class DenseTensor[@specialized(Double, Float) T] (
   }
 
   /**
-    * Elementwise multiplication
-    * @param other other tensor
-    * @param m type parameter
-    * @return returns new tensor
-    */
+   * Elementwise multiplication
+   * @param other other tensor
+   * @param m type parameter
+   * @return returns new tensor
+   */
   def :*(other: DenseTensor[T])(implicit m: ClassTag[T]): DenseTensor[T] = {
     require(equalShape(other), "Must be equal shape")
     val sz = size
@@ -352,9 +352,9 @@ class DenseTensor[@specialized(Double, Float) T] (
   }
 
   /**
-    * Sum of the elements
-    * @return sum
-    */
+   * Sum of the elements
+   * @return sum
+   */
   def sum: T = {
     var i = offset
     var mySum = numOps.minus(data(i), data(i))
@@ -367,9 +367,9 @@ class DenseTensor[@specialized(Double, Float) T] (
   }
 
   /**
-    * Norm of the vector
-    * @return norm
-    */
+   * Norm of the vector
+   * @return norm
+   */
   def norm: T = {
     var i = offset
     var mySum = numOps.minus(data(i), data(i))
@@ -382,11 +382,11 @@ class DenseTensor[@specialized(Double, Float) T] (
   }
 
   /**
-    * Equals for transposed, shape and data
-    * @param other tensor
-    * @return true if equal, false overwise
-    */
-  def equals(other: DenseTensor[T]): Boolean = {
+   * Equals for transposed, shape and data
+   * @param other tensor
+   * @return true if equal, false overwise
+   */
+  def isEqual(other: DenseTensor[T]): Boolean = {
     if (this.transposed != other.transposed || !equalShape(other)) {
       return false
     } else {
@@ -425,37 +425,42 @@ object DenseTensor {
 
   /**
    * Create a tensor with zeros
-    *
-    * @param tensorShape shape
+   *
+   * @param tensorShape shape
    * @param m ClassTag
    * @tparam T implicit type
    * @return tensor
    */
   def apply[@specialized(Double, Float) T](tensorShape: Array[Int])
-                                          (implicit m: ClassTag[T], numOps: NumberLike[T]): DenseTensor[T] = {
+                                          (implicit m: ClassTag[T],
+                                           numOps: NumberLike[T]): DenseTensor[T] = {
     val data: Array[T] = new Array[T](tensorShape.product)
     DenseTensor(data, tensorShape)
   }
 
   /**
    * Create a tensor from data
-    *
-    * @param data data
+   *
+   * @param data data
    * @param tensorShape shape
    * @param offset offset in the data
    * @param m ClassTag
    * @tparam T implicit type
    * @return tensor
    */
-  def apply[@specialized(Double, Float) T](data: Array[T], tensorShape: Array[Int], offset: Int = 0, isTransposed: Boolean = false)
-              (implicit m: ClassTag[T], numOps: NumberLike[T]): DenseTensor[T] = {
+  def apply[@specialized(Double, Float) T](
+  data: Array[T],
+  tensorShape: Array[Int],
+  offset: Int = 0,
+  isTransposed: Boolean = false)
+  (implicit m: ClassTag[T], numOps: NumberLike[T]): DenseTensor[T] = {
     new DenseTensor[T](data, tensorShape, offset, isTransposed)
   }
 
   /**
    * Create and fill tensor with values
-    *
-    * @param tensorShape shape
+   *
+   * @param tensorShape shape
    * @param elem value
    * @param m ClassTag
    * @tparam T type
@@ -463,18 +468,19 @@ object DenseTensor {
    */
   def fill[@specialized(Double, Float) T](tensorShape: Array[Int])
                                          (elem: => T)
-                                         (implicit m: ClassTag[T], numOps: NumberLike[T]): DenseTensor[T] = {
+                                         (implicit m: ClassTag[T],
+                                          numOps: NumberLike[T]): DenseTensor[T] = {
     val data: Array[T] = Array.fill[T](tensorShape.product)(elem)
     DenseTensor(data, tensorShape)
   }
 
   /**
-    * Apply a function to tensor x in place
-    *
-    * @param x source
-    * @param func function
-    * @tparam T type
-    */
+   * Apply a function to tensor x in place
+   *
+   * @param x source
+   * @param func function
+   * @tparam T type
+   */
   def applyFunction[@specialized(Double, Float) T](x: DenseTensor[T], func: T => T)
                       (implicit m: ClassTag[T], numOps: NumberLike[T]): Unit = {
     var i = x.offset
@@ -493,8 +499,11 @@ object DenseTensor {
    * @param func function
    * @tparam T type
    */
-  def applyFunction[@specialized(Double, Float) T](x: DenseTensor[T], y: DenseTensor[T], func: T => T)
-                                                  (implicit m: ClassTag[T], numOps: NumberLike[T]): Unit = {
+  def applyFunction[@specialized(Double, Float) T](x: DenseTensor[T],
+                                                   y: DenseTensor[T],
+                                                   func: T => T)
+                                                  (implicit m: ClassTag[T],
+                                                   numOps: NumberLike[T]): Unit = {
     require(x.size == y.size, "Tensor sizes must be equal")
     var i = 0
     val sz = y.size
@@ -506,8 +515,8 @@ object DenseTensor {
 
   /**
    * Apply a function to tensor x and put the result in the y
-    *
-    * @param x1 source1
+   *
+   * @param x1 source1
    * @param x2 source2
    * @param y result
    * @param func function
@@ -529,8 +538,8 @@ object DenseTensor {
 
   /**
    * Double 2d tensor multiplication C <- alpha * A * B + beta * C
-    *
-    * @param alpha alpha
+   *
+   * @param alpha alpha
    * @param a A
    * @param b B
    * @param beta beta
@@ -551,20 +560,20 @@ object DenseTensor {
     require(b.shape(1) == c.shape(1), "B & C Dimension mismatch!")
     NativeBLAS.dgemm(transposeString(a), transposeString(b), c.shape(0), c.shape(1), a.shape(1),
     // TODO: check majorStride
-      alpha, a.data, a.offset, /* a.shape(0), */ a.majorStride,
-      b.data, b.offset, /* b.shape(0) */ b.majorStride,
+      alpha, a.data, a.offset, a.majorStride,
+      b.data, b.offset, b.majorStride,
       beta, c.data, c.offset, c.shape(0))
   }
 
   /**
-    * Double 2d tensor multiplication C <- alpha * A * B + beta * C
-    *
-    * @param alpha alpha
-    * @param a A
-    * @param b B
-    * @param beta beta
-    * @param c C
-    */
+   * Double 2d tensor multiplication C <- alpha * A * B + beta * C
+   *
+   * @param alpha alpha
+   * @param a A
+   * @param b B
+   * @param beta beta
+   * @param c C
+   */
   def gemm(
              alpha: Float,
              a: DenseTensor[Float],
@@ -589,8 +598,8 @@ object DenseTensor {
 
   /**
    * GEMV: y := alpha * A * x + beta * y
-    *
-    * @param alpha alpha
+   *
+   * @param alpha alpha
    * @param a A
    * @param x x
    * @param beta beta
@@ -607,15 +616,15 @@ object DenseTensor {
     require(a.shape(1) == x.shape(0), "A & X Dimension mismatch!")
     require(a.shape(0) == y.shape(0), "A & Y Dimension mismatch!")
     NativeBLAS.dgemv(transposeString(a), a.shape(0), a.shape(1),
-      alpha, a.data, a.offset, a.shape(0) /* a.majorStride */,
-      x.data, x.offset, 1 /* x.shape(0) */ /* x.stride */,
-      beta, y.data, y.offset, 1 /* y.shape(0) */ /* y.stride */)
+      alpha, a.data, a.offset, a.shape(0),
+      x.data, x.offset, 1,
+      beta, y.data, y.offset, 1)
   }
 
   /**
    * GEMV: y := alpha * A * x + beta * y
-    *
-    * @param alpha alpha
+   *
+   * @param alpha alpha
    * @param a A
    * @param x x
    * @param beta beta
@@ -632,18 +641,18 @@ object DenseTensor {
     require(a.shape(1) == x.shape(0), "A & X Dimension mismatch!")
     require(a.shape(0) == y.shape(0), "A & Y Dimension mismatch!")
     NativeBLAS.sgemv(transposeString(a), a.shape(0), a.shape(1),
-      alpha, a.data, a.offset, a.shape(0) /* a.majorStride */,
-      x.data, x.offset, 1 /* x.shape(0) */ /* x.stride */,
-      beta, y.data, y.offset, 1 /* y.shape(0) */ /* y.stride */)
+      alpha, a.data, a.offset, a.shape(0),
+      x.data, x.offset, 1,
+      beta, y.data, y.offset, 1)
   }
 
   /**
-    * y := alpha * x + y
-    *
-    * @param alpha alpha
-    * @param x vector x
-    * @param y vector y
-    */
+   * y := alpha * x + y
+   *
+   * @param alpha alpha
+   * @param x vector x
+   * @param y vector y
+   */
   def axpy(alpha: Double, x: DenseTensor[Double], y: DenseTensor[Double]): Unit = {
     require(x.size == y.size, "x and y sizes equals")
     val n = x.size
@@ -651,12 +660,12 @@ object DenseTensor {
   }
 
   /**
-    * y := alpha * x + y
-    *
-    * @param alpha alpha
-    * @param x vector x
-    * @param y vector y
-    */
+   * y := alpha * x + y
+   *
+   * @param alpha alpha
+   * @param x vector x
+   * @param y vector y
+   */
   def axpy(alpha: Float, x: DenseTensor[Float], y: DenseTensor[Float]): Unit = {
     require(x.size == y.size, "x and y sizes equals")
     val n = x.size
@@ -664,20 +673,20 @@ object DenseTensor {
   }
 
   /**
-    * x := alpha * x
-    * @param alpha alpha
-    * @param x vector x
-    */
+   * x := alpha * x
+   * @param alpha alpha
+   * @param x vector x
+   */
   def scal(alpha: Double, x: DenseTensor[Double]): Unit = {
     val n = x.size
     NativeBLAS.dscal(n, alpha, x.data, x.offset, 1)
   }
 
   /**
-    * x := alpha * x
-    * @param alpha alpha
-    * @param x x
-    */
+   * x := alpha * x
+   * @param alpha alpha
+   * @param x x
+   */
   def scal(alpha: Float, x: DenseTensor[Float]): Unit = {
     val n = x.size
     NativeBLAS.sscal(n, alpha, x.data, x.offset, 1)
@@ -697,11 +706,11 @@ object DenseTensor {
   }
 
   /**
-    * Elementwise product a := a * b
-    *
-    * @param a vector a
-    * @param b vector b
-    */
+   * Elementwise product a := a * b
+   *
+   * @param a vector a
+   * @param b vector b
+   */
   def elementwiseProduct(a: DenseTensor[Double], b: DenseTensor[Double]): Unit = {
     elementwise(a, b, (x, y) => x * y)
   }

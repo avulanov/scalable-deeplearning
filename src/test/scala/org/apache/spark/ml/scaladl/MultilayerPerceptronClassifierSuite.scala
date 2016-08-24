@@ -17,11 +17,11 @@
 
 package org.apache.spark.ml.scaladl
 
+import org.scalatest.FunSuite
+import scaladl.util.SparkTestContext
+
 import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.sql.Row
-import org.scalatest.FunSuite
-
-import scaladl.util.SparkTestContext
 
 class MultilayerPerceptronClassifierSuite extends FunSuite with SparkTestContext {
 

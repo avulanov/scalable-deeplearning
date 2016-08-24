@@ -1,10 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.github.avulanov</groupId>
-  <artifactId>scaleann</artifactId>
+  <groupId>scaladl</groupId>
+  <artifactId>scaladl</artifactId>
   <version>1.0-SNAPSHOT</version>
   <name>${project.artifactId}</name>
-  <description>Scalable implementation of artificial neural networks for Spark deep learning</description>
+  <description>Scalable implementation of Deep Learning for Spark</description>
   <inceptionYear>2016</inceptionYear>
   <licenses>
     <license>
@@ -32,6 +32,7 @@
       <groupId>com.github.fommil.netlib</groupId>
       <artifactId>all</artifactId>
       <version>1.1.2</version>
+      <type>pom</type>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
@@ -103,6 +104,30 @@
             <include>**/*Suite.*</include>
           </includes>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.scalastyle</groupId>
+        <artifactId>scalastyle-maven-plugin</artifactId>
+        <version>0.8.0</version>
+        <configuration>
+          <verbose>false</verbose>
+          <failOnViolation>true</failOnViolation>
+          <includeTestSourceDirectory>false</includeTestSourceDirectory>
+          <failOnWarning>false</failOnWarning>
+          <sourceDirectory>${basedir}/src/main/scala</sourceDirectory>
+          <testSourceDirectory>${basedir}/src/test/scala</testSourceDirectory>
+          <configLocation>scalastyle-config.xml</configLocation>
+          <outputFile>${basedir}/target/scalastyle-output.xml</outputFile>
+          <inputEncoding>UTF-8</inputEncoding>
+          <outputEncoding>UTF-8</outputEncoding>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
