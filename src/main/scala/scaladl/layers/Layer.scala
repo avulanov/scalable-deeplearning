@@ -19,12 +19,12 @@ package scaladl.layers
 
 import java.util.Random
 
+import org.apache.spark.ml.linalg.{Vector, Vectors}
+import org.apache.spark.rdd.RDD
+
 import scaladl.layers.AnnTypes._
 import scaladl.optimization._
 import scaladl.tensor.DenseTensor
-
-import org.apache.spark.ml.linalg.{Vector, Vectors}
-import org.apache.spark.rdd.RDD
 
 object AnnTypes {
   type Tensor = DenseTensor[Double]

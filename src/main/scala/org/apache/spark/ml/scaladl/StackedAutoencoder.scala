@@ -18,9 +18,6 @@
 package org.apache.spark.ml.scaladl
 
 import breeze.linalg.{DenseVector => BDV}
-import scaladl.layers.{EmptyLayerWithSquaredError, FeedForwardTopology, FeedForwardTrainer}
-
-import org.apache.spark.annotation.Experimental
 import org.apache.spark.ml.{Estimator, Model}
 import org.apache.spark.ml.linalg.{Vector, Vectors, VectorUDT}
 import org.apache.spark.ml.param.{BooleanParam, ParamMap, Params}
@@ -30,6 +27,8 @@ import org.apache.spark.sql.{DataFrame, Dataset, Row}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{StructField, StructType}
 import org.apache.spark.storage.StorageLevel
+
+import scaladl.layers.{EmptyLayerWithSquaredError, FeedForwardTopology, FeedForwardTrainer}
 
 /**
  * Params for [[StackedAutoencoder]].
@@ -76,8 +75,6 @@ private[scaladl] trait StackedAutoencoderParams extends Params with HasInputCol 
   setDefault(dataIn01Interval -> true, buildDecoder -> false, memoryOnlyCaching -> true)
 }
 
-
-@Experimental
 class StackedAutoencoder (override val uid: String)
   extends Estimator[StackedAutoencoderModel]
   with MultilayerPerceptronParams with StackedAutoencoderParams {
@@ -238,7 +235,6 @@ class StackedAutoencoder (override val uid: String)
   }
 }
 
-@Experimental
 class StackedAutoencoderModel private[ml] (
     override val uid: String,
     val layers: Array[Int],

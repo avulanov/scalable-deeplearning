@@ -17,12 +17,12 @@
 
 package scaladl.layers
 
+import org.apache.spark.ml.linalg.Vectors
 import org.scalatest.FunSuite
+
 import scaladl.layers.AnnTypes._
 import scaladl.tensor.DenseTensor
 import scaladl.util.SparkTestContext
-
-import org.apache.spark.ml.linalg.Vectors
 
 class GradientSuite extends FunSuite with SparkTestContext {
 

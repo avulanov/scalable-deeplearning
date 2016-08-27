@@ -21,13 +21,12 @@ import scala.collection.mutable
 
 import breeze.linalg.{DenseVector => BDV}
 import breeze.optimize.{CachedDiffFunction, DiffFunction, LBFGS => BreezeLBFGS}
-import scaladl.layers.AnnTypes.Tensor
-import scaladl.tensor.DenseTensor
-
 import org.apache.log4j.{Level, LogManager}
-
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.rdd.RDD
+
+import scaladl.layers.AnnTypes.Tensor
+import scaladl.tensor.DenseTensor
 
 
 class LBFGS(private var gradient: Gradient, private var updater: Updater)

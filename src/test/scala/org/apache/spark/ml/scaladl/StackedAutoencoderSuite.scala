@@ -17,12 +17,11 @@
 
 package org.apache.spark.ml.scaladl
 
-import scaladl.util.SparkTestContext
-
 import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.sql.Row
-
 import org.scalatest.FunSuite
+
+import scaladl.util.SparkTestContext
 
 class StackedAutoencoderSuite extends FunSuite with SparkTestContext {
 
@@ -73,7 +72,6 @@ class StackedAutoencoderSuite extends FunSuite with SparkTestContext {
       // epsilon == 1/100 of the maximum value
       val eps = if (is01) 1.0 / 100 else 10.0 / 100
       decodedData.collect.foreach { case Row(input: Vector, _: Vector, decoded: Vector) =>
-        //assert(input ~== decoded absTol eps)
         input.toArray.zip(decoded.toArray).foreach { x =>
           assert(math.abs(x._1 - x._2) <= eps,
             "Decoder should produce vectors close to the input")

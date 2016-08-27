@@ -17,12 +17,12 @@
 
 package org.apache.spark.ml.scaladl
 
-import org.scalatest.FunSuite
-import scaladl.util.SparkTestContext
-
 import org.apache.spark.ml.classification.{MultilayerPerceptronClassifier => SMLP}
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
 import org.apache.spark.ml.scaladl.{MultilayerPerceptronClassifier => TMLP}
+import org.scalatest.FunSuite
+
+import scaladl.util.SparkTestContext
 
 class ANNSpeedSuite extends FunSuite with SparkTestContext {
 
@@ -49,9 +49,8 @@ class ANNSpeedSuite extends FunSuite with SparkTestContext {
 //    println("Accuracy: " + ev.evaluate(pl))
 //  }
 
-  test ("speed test with tensor") {
+  test ("speed test with tensor (native BLAS and MNIST_HOME needs to be configured") {
     val mnistPath = System.getenv("MNIST_HOME")
-    // println(mnistPath + "/mnist.scale")
     val dataFrame = spark
       .read
       .format("libsvm")
@@ -59,7 +58,7 @@ class ANNSpeedSuite extends FunSuite with SparkTestContext {
       .load(mnistPath + "/mnist.scale")
       .persist()
     dataFrame.count()
-    val layers = Array(784, 150, 10)
+    val layers = Array(784, 100, 10)
     val maxIter = 20
     val tol = 1e-9
     val warmUp = new SMLP().setLayers(layers)
@@ -76,8 +75,6 @@ class ANNSpeedSuite extends FunSuite with SparkTestContext {
     val t = System.nanoTime()
     val model = mlp.fit(dataFrame)
     val total = System.nanoTime() - t
-    println("ANN total time: " + total / 1e9 +
-      " s. (should be ~37. without native BLAS with warm-up)")
     val tensorMLP = new TMLP().setLayers(layers)
       .setTol(tol)
       .setMaxIter(maxIter)
@@ -85,23 +82,22 @@ class ANNSpeedSuite extends FunSuite with SparkTestContext {
     val tTensor = System.nanoTime()
     val tModel = tensorMLP.fit(dataFrame)
     val totalTensor = System.nanoTime() - tTensor
-    println("Tensor total time: " + totalTensor / 1e9 +
-     " s. (should be ~37s. without native BLAS with warm-up)")
-
+    // time is 49.9 s on my machine
+    assert(math.abs(totalTensor - total) / 1e9 < 0.15 * total /1e9,
+      "Training time of tensor version should differ no more than 15% s. from original version")
     val test = spark
       .read
       .format("libsvm")
       .option("numFeatures", 784)
-      .load(mnistPath + "/mnist.scale")
+      .load(mnistPath + "/mnist.scale.t")
       .persist()
     test.count()
     val result = model.transform(test)
     val pl = result.select("prediction", "label")
     val ev = new MulticlassClassificationEvaluator().setMetricName("accuracy")
-    println("ANN Accuracy: " + ev.evaluate(pl))
     val tResult = tModel.transform(test)
     val tpl = tResult.select("prediction", "label")
     val tev = new MulticlassClassificationEvaluator().setMetricName("accuracy")
-    println("Tensor Accuracy: " + tev.evaluate(tpl))
+    assert(tev.evaluate(tpl) == ev.evaluate(pl), "Accuracies must be equal")
   }
 }

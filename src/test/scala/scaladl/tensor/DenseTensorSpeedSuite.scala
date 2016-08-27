@@ -19,7 +19,7 @@ package scaladl.tensor
 
 import scala.util.Random
 
-import breeze.linalg.{DenseMatrix, sum}
+import breeze.linalg.{sum, DenseMatrix}
 import org.scalatest.FunSuite
 
 class DenseTensorSpeedSuite extends FunSuite {

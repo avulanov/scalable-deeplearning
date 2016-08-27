@@ -17,11 +17,11 @@
 
 package org.apache.spark.ml.scaladl
 
-import org.scalatest.FunSuite
-import scaladl.util.SparkTestContext
-
 import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.sql.Row
+import org.scalatest.FunSuite
+
+import scaladl.util.SparkTestContext
 
 class MultilayerPerceptronClassifierSuite extends FunSuite with SparkTestContext {
 
@@ -65,12 +65,9 @@ class MultilayerPerceptronClassifierSuite extends FunSuite with SparkTestContext
     val weights1 = trainer.fit(dataFrame).weights
     trainer.setInitialWeights(initialWeights.copy)
     val weights2 = trainer.fit(dataFrame).weights
-    //    assert(weights1 ~== weights2 absTol 10e-5,
-    //      "Training should produce the same weights given equal initial weights and number of steps")
     weights1.toArray.zip(weights2.toArray).foreach { x =>
       assert(math.abs(x._1 - x._2) <= 10e-5,
         "Training should produce the same weights given equal initial weights and number of steps")
     }
   }
-
 }

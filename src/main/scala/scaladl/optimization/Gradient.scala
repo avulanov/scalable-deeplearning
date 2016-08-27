@@ -17,16 +17,14 @@
 
 package scaladl.optimization
 
-import scaladl.layers.AnnTypes.Tensor
-
-import org.apache.spark.annotation.DeveloperApi
 import org.apache.spark.ml.linalg.Vector
+
+import scaladl.layers.AnnTypes.Tensor
 
 /**
  * :: DeveloperApi ::
  * Class used to compute the gradient for a loss function, given a single data point.
  */
-@DeveloperApi
 abstract class Gradient extends Serializable {
   /**
    * Compute the gradient and loss given the features of a single data point.

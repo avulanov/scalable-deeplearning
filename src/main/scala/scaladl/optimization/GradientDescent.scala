@@ -19,13 +19,12 @@ package scaladl.optimization
 
 import scala.collection.mutable.ArrayBuffer
 
-import scaladl.layers.AnnTypes.Tensor
-import scaladl.tensor.DenseTensor
-
 import org.apache.log4j.{Level, LogManager}
-
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.rdd.RDD
+
+import scaladl.layers.AnnTypes.Tensor
+import scaladl.tensor.DenseTensor
 
 /**
  * Class used to solve an optimization problem using Gradient Descent.

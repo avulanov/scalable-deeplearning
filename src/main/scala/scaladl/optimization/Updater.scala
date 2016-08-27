@@ -17,8 +17,7 @@
 
 package scaladl.optimization
 
-import scaladl.layers.AnnTypes
-import AnnTypes.Tensor
+import scaladl.layers.AnnTypes.Tensor
 
 abstract class Updater extends Serializable {
   /**

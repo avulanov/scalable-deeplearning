@@ -18,9 +18,8 @@
 package scaladl.util
 
 import org.apache.log4j.{Level, Logger}
-
-import org.apache.spark.SparkContext
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.SparkContext
 import org.scalatest.{BeforeAndAfterAll, Suite}
 
 trait SparkTestContext extends BeforeAndAfterAll { self: Suite =>

@@ -19,8 +19,6 @@ package org.apache.spark.ml.scaladl
 
 import scala.collection.JavaConverters._
 
-import scaladl.layers.{FeedForwardTopology, FeedForwardTrainer}
-
 import org.apache.spark.ml.{PredictionModel, Predictor, PredictorParams}
 import org.apache.spark.ml.feature.LabeledPoint
 import org.apache.spark.ml.linalg.{Vector, Vectors}
@@ -29,6 +27,8 @@ ParamValidators}
 import org.apache.spark.ml.param.shared.{HasMaxIter, HasSeed, HasTol}
 import org.apache.spark.ml.util.Identifiable
 import org.apache.spark.sql.Dataset
+
+import scaladl.layers.{FeedForwardTopology, FeedForwardTrainer}
 
 /**
  * Params for Multilayer Perceptron.

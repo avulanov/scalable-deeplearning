@@ -17,11 +17,10 @@
 
 package scaladl.layers
 
-import org.scalatest.FunSuite
-import scaladl.util.SparkTestContext
-
 import org.apache.spark.ml.linalg.Vectors
+import org.scalatest.FunSuite
 
+import scaladl.util.SparkTestContext
 
 class LayerSuite extends FunSuite with SparkTestContext {
 
