@@ -60,7 +60,7 @@ Start Spark with this library:
 Or use it as external dependency for your application.
 
 ### Multilayer perceptron
-```
+```scala
 import org.apache.spark.ml.scaladl.MultilayerPerceptronClassifier
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
 
@@ -93,7 +93,7 @@ On a single machine after ~2 minutes:
 Accuracy: 0.9616
 ```
 ### Stacked Autoencoder
-```
+```scala
 import org.apache.spark.ml.scaladl.StackedAutoencoder
 // Load the data stored in LIBSVM format as a DataFrame.
 // MNIST handwritten recognition data 
