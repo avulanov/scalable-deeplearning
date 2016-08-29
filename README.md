@@ -118,3 +118,15 @@ val encodedData = saModel.transform(df)
 saModel.setInputCol("encoded").setOutputCol("decoded")
 val decodedData = saModel.decode(encodedData)
 ```
+## Contributions
+Contributions are welcome, in particular in the following areas:
+  - New layers
+    - Convolutional
+    - ReLu
+  - Flexibility of configuration
+    - Implement the reader of Caffe/other deep learning configuration format
+  - Efficiency
+    - Switch from double to single precision 
+    - Implement wrapper to specialized deep learning libraries, e.g. TensorFlow
+  - Refactoring
+    - Implement own version of L-BFGS to remove dependency on breeze
