@@ -61,14 +61,22 @@ Or use it as external dependency for your application.
 
 ### Multilayer perceptron
 ```scala
-import org.apache.spark.ml.scaladl.MultilayerPerceptronClassifier
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
+import org.apache.spark.ml.scaladl.MultilayerPerceptronClassifier
+import org.apache.spark.sql.SparkSession
 
-// Load the data stored in LIBSVM format as a DataFrame.
-// MNIST handwritten recognition data 
+val spark = SparkSession.builder
+  .master("local")
+  .appName("my-spark-app")
+  .config("spark.sql.warehouse.dir", "warehouse-temp")
+  .getOrCreate()
+// Load MNIST handwritten recognition data stored in LIBSVM format as a DataFrame.
 // https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/multiclass.html
-val train = spark.read.format("libsvm").option("numFeatures", 784).load("mnist.scale")
-val test =  spark.read.format("libsvm").option("numFeatures", 784).load("mnist.scale.t")
+val train = spark.read.format("libsvm").option("numFeatures", 784).load("mnist.scale").persist()
+val test =  spark.read.format("libsvm").option("numFeatures", 784).load("mnist.scale.t").persist()
+// materialize data lazily persisted in memory
+train.count()
+test.count()
 // specify layers for the neural network:
 // input layer of size 784 (features), one hidden layer of size 100
 // and output of size 10 (classes)
@@ -84,8 +92,7 @@ val model = trainer.fit(train)
 // compute accuracy on the test set
 val result = model.transform(test)
 val predictionAndLabels = result.select("prediction", "label")
-val evaluator = new MulticlassClassificationEvaluator()
-  .setMetricName("accuracy")
+val evaluator = new MulticlassClassificationEvaluator().setMetricName("accuracy")
 println("Accuracy: " + evaluator.evaluate(predictionAndLabels))
 ```
 On a single machine after ~2 minutes:
@@ -99,10 +106,10 @@ import org.apache.spark.ml.scaladl.StackedAutoencoder
 // MNIST handwritten recognition data 
 // https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/multiclass.html
 val train = spark.read.format("libsvm").option("numFeatures", 784).load("mnist.scale")
-// create autoencoder and decode with one hiddel layer of 32 neurons
+// create autoencoder and decode with one hidden layer of 32 neurons
 val stackedAutoencoder = new StackedAutoencoder()
   .setLayers(Array(784, 32))
-  .setBlockSize(1)
+  .setBlockSize(128)
   .setMaxIter(100)
   .setSeed(123456789L)
   .setTol(1e-6)
