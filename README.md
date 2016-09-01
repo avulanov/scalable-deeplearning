@@ -60,6 +60,7 @@ Start Spark with this library:
 Or use it as external dependency for your application.
 
 ### Multilayer perceptron
+MNIST classification
 ```scala
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
 import org.apache.spark.ml.scaladl.MultilayerPerceptronClassifier
@@ -100,30 +101,58 @@ On a single machine after ~2 minutes:
 Accuracy: 0.9616
 ```
 ### Stacked Autoencoder
+Pre-training
 ```scala
-import org.apache.spark.ml.scaladl.StackedAutoencoder
+import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
+import org.apache.spark.ml.scaladl.{MultilayerPerceptronClassifier, StackedAutoencoder}
+
+val mnistPath = System.getenv("MNIST_HOME")
+val mnistTrain = mnistPath + "/mnist.scale"
+val mnistTest = mnistPath + "/mnist.scale.t"
 // Load the data stored in LIBSVM format as a DataFrame.
-// MNIST handwritten recognition data 
+// MNIST handwritten recognition data
 // https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/multiclass.html
-val train = spark.read.format("libsvm").option("numFeatures", 784).load("mnist.scale")
+val train = spark.read.format("libsvm").option("numFeatures", 784).load(mnistTrain).persist()
+val test =  spark.read.format("libsvm").option("numFeatures", 784).load(mnistTest).persist()
+// materialize data lazily persisted in memory
+train.count()
+test.count()
+// specify layers for the neural network:
+// input layer of size 784 (features), one hidden layer of size 100
+// and output of size 10 (classes)
+val layers = Array[Int](784, 32, 10)
 // create autoencoder and decode with one hidden layer of 32 neurons
 val stackedAutoencoder = new StackedAutoencoder()
-  .setLayers(Array(784, 32))
+  .setLayers(layers.init)
   .setBlockSize(128)
-  .setMaxIter(100)
-  .setSeed(123456789L)
+  .setMaxIter(1)
+  .setSeed(333L)
   .setTol(1e-6)
-  .setInputCol("input")
+  .setInputCol("features")
   .setOutputCol("output")
-  .setDataIn01Interval(is01)
-  .setBuildDecoder(true)
-val saModel = stackedAutoencoder.fit(df)
-saModel.setInputCol("input").setOutputCol("encoded")
-// encoding
-val encodedData = saModel.transform(df)
-// decoding
-saModel.setInputCol("encoded").setOutputCol("decoded")
-val decodedData = saModel.decode(encodedData)
+  .setDataIn01Interval(true)
+  .setBuildDecoder(false)
+val saModel = stackedAutoencoder.fit(train)
+val autoWeights = saModel.encoderWeights
+val trainer = new MultilayerPerceptronClassifier()
+  .setLayers(layers)
+  .setBlockSize(128)
+  .setSeed(123456789L)
+  .setMaxIter(1)
+  .setTol(1e-6)
+val initialWeights = trainer.fit(train).weights
+System.arraycopy(
+  autoWeights.toArray, 0, initialWeights.toArray, 0, autoWeights.toArray.length)
+trainer
+  .setInitialWeights(initialWeights)
+  .setMaxIter(10)
+  .setTol(1e-6)
+val model = trainer.fit(train)
+val result = model.transform(test)
+val predictionAndLabels = result.select("prediction", "label")
+val evaluator = new MulticlassClassificationEvaluator()
+  .setMetricName("accuracy")
+println("Accuracy: " + evaluator.evaluate(predictionAndLabels))
 ```
 ## Contributions
 Contributions are welcome, in particular in the following areas:
