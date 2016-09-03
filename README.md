@@ -22,9 +22,11 @@ mvn package
 The jar library will be availabe in `target` folder.
 
 ### Performance configuration
-For the best performance, native BLAS library should be in the path of all nodes that run Spark. The required name is `libblas.so.3`. OpenBLAS is recommended. Below are the setup details for different platforms. Indication of successfull use of BLAS is the following line in Spark logs:
+Scaladl uses [netlib-java](https://github.com/fommil/netlib-java) library for optimized numerical processing. If native libraries are not available at runtime, you will see a warning and pure JVM implementation will be used. To use optimized binaries: 
+  - include `com.github.fommil.netlib:all:1.1.2` in the project [or build Spark with `-Pnetlib-lgpl`](https://spark.apache.org/docs/latest/ml-guide.html)
+  - native BLAS library should be in the path of all nodes that run Spark. The required name is `libblas.so.3`. OpenBLAS is recommended. Below are the setup details for different platforms. Indication of successfull use of BLAS is the following line in Spark logs:
 ```
-INFO JniLoader: successfully loaded ...netlib-native_system-....dll
+INFO JniLoader: successfully loaded ...netlib-native_system-....
 ```
 ### Linux:
 Install native blas library (depending on your distributive):
@@ -53,6 +55,12 @@ libblas3.dll // copy of libopenblas.dll
   - OpenBLAS http://www.openblas.net/
 
 ## Example of use
+### Built-in examples
+Scaldl provides working examples of MNIST classification and pre-training with stacked autoencoder. Examples are in [`scaladl.examples`](https://github.com/avulanov/scalable-deeplearning/tree/master/src/main/scala/scaladl/examples) package. They can be run via Spark submit:
+```
+./spark-submit --class scaladl.MnistClassificaion --master spark://master:7077 /path/to/scaldl.jar /path/to/mnist-libsvm
+```
+### Spark shell
 Start Spark with this library:
 ```
 ./spark-shell --jars scaladl.jar
@@ -61,106 +69,50 @@ Or use it as external dependency for your application.
 
 ### Multilayer perceptron
 MNIST classification
-```scala
-import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
-import org.apache.spark.ml.scaladl.MultilayerPerceptronClassifier
-import org.apache.spark.sql.SparkSession
+  - Load MNIST handwritten recognition data stored in [LIBSVM format](https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/multiclass.html) as a DataFrame
+  - Initialize the multilayer perceptron classifier with 784 inputs, 32 neurons in hidden layer and 10 outputs
+  - Train and predict
 
-val spark = SparkSession.builder
-  .master("local")
-  .appName("my-spark-app")
-  .config("spark.sql.warehouse.dir", "warehouse-temp")
-  .getOrCreate()
-// Load MNIST handwritten recognition data stored in LIBSVM format as a DataFrame.
-// https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/multiclass.html
+```scala
+import org.apache.spark.ml.scaladl.MultilayerPerceptronClassifier
 val train = spark.read.format("libsvm").option("numFeatures", 784).load("mnist.scale").persist()
-val test =  spark.read.format("libsvm").option("numFeatures", 784).load("mnist.scale.t").persist()
-// materialize data lazily persisted in memory
-train.count()
-test.count()
-// specify layers for the neural network:
-// input layer of size 784 (features), one hidden layer of size 100
-// and output of size 10 (classes)
-val layers = Array[Int](784, 32, 10)
-// create the trainer and set its parameters
-val trainer = new MultilayerPerceptronClassifier()
-  .setLayers(layers)
-  .setBlockSize(128)
-  .setSeed(1234L)
-  .setMaxIter(100)
-// train the model
+train.count() // materialize data lazy persisted in memory
+val trainer = new MultilayerPerceptronClassifier().setLayers(Array(784, 32, 10)).setMaxIter(100)
 val model = trainer.fit(train)
-// compute accuracy on the test set
 val result = model.transform(test)
-val predictionAndLabels = result.select("prediction", "label")
-val evaluator = new MulticlassClassificationEvaluator().setMetricName("accuracy")
-println("Accuracy: " + evaluator.evaluate(predictionAndLabels))
-```
-On a single machine after ~2 minutes:
-```
-Accuracy: 0.9616
 ```
 ### Stacked Autoencoder
 Pre-training
+  - Load MNIST data
+  - Initialize the stacked autoencoder with 784 inputs and 32 neurons in hidden layer
+  - Train stacked autoencoder
+  - Initialize the multilayer perceptron classifier with 784 inputs, 32 neurons in hidden layer and 
 ```scala
-import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
 import org.apache.spark.ml.scaladl.{MultilayerPerceptronClassifier, StackedAutoencoder}
-
-val mnistPath = System.getenv("MNIST_HOME")
-val mnistTrain = mnistPath + "/mnist.scale"
-val mnistTest = mnistPath + "/mnist.scale.t"
-// Load the data stored in LIBSVM format as a DataFrame.
-// MNIST handwritten recognition data
-// https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/multiclass.html
 val train = spark.read.format("libsvm").option("numFeatures", 784).load(mnistTrain).persist()
-val test =  spark.read.format("libsvm").option("numFeatures", 784).load(mnistTest).persist()
-// materialize data lazily persisted in memory
 train.count()
-test.count()
-// specify layers for the neural network:
-// input layer of size 784 (features), one hidden layer of size 100
-// and output of size 10 (classes)
-val layers = Array[Int](784, 32, 10)
-// create autoencoder and decode with one hidden layer of 32 neurons
-val stackedAutoencoder = new StackedAutoencoder()
-  .setLayers(layers.init)
-  .setBlockSize(128)
-  .setMaxIter(1)
-  .setSeed(333L)
-  .setTol(1e-6)
+val stackedAutoencoder = new StackedAutoencoder().setLayers(Array(784, 32))
   .setInputCol("features")
   .setOutputCol("output")
   .setDataIn01Interval(true)
   .setBuildDecoder(false)
 val saModel = stackedAutoencoder.fit(train)
 val autoWeights = saModel.encoderWeights
-val trainer = new MultilayerPerceptronClassifier()
-  .setLayers(layers)
-  .setBlockSize(128)
-  .setSeed(123456789L)
-  .setMaxIter(1)
-  .setTol(1e-6)
+val trainer = new MultilayerPerceptronClassifier().setLayers(Array(784, 32, 10)).setMaxIter(1)
 val initialWeights = trainer.fit(train).weights
-System.arraycopy(
-  autoWeights.toArray, 0, initialWeights.toArray, 0, autoWeights.toArray.length)
-trainer
-  .setInitialWeights(initialWeights)
-  .setMaxIter(10)
-  .setTol(1e-6)
+System.arraycopy(autoWeights.toArray, 0, initialWeights.toArray, 0, autoWeights.toArray.length)
+trainer.setInitialWeights(initialWeights).setMaxIter(10)
 val model = trainer.fit(train)
 val result = model.transform(test)
-val predictionAndLabels = result.select("prediction", "label")
-val evaluator = new MulticlassClassificationEvaluator()
-  .setMetricName("accuracy")
-println("Accuracy: " + evaluator.evaluate(predictionAndLabels))
 ```
 ## Contributions
 Contributions are welcome, in particular in the following areas:
   - New layers
     - Convolutional
     - ReLu
-  - Flexibility of configuration
+  - Flexibility
     - Implement the reader of Caffe/other deep learning configuration format
+    - Implement Python/R/Java interface
   - Efficiency
     - Switch from double to single precision 
     - Implement wrapper to specialized deep learning libraries, e.g. TensorFlow
