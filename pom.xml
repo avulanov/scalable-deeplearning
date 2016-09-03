@@ -30,9 +30,66 @@
     </dependency>
     <dependency>
       <groupId>com.github.fommil.netlib</groupId>
-      <artifactId>all</artifactId>
+      <artifactId>core</artifactId>
       <version>1.1.2</version>
-      <type>pom</type>
+    </dependency>
+    <!-- Workaround to force maven shade include this artifact into the jar -->
+    <dependency>
+      <groupId>com.github.fommil</groupId>
+      <artifactId>jniloader</artifactId>
+      <version>1.1</version>
+    </dependency>
+    <dependency>
+      <groupId>net.sourceforge.f2j</groupId>
+      <artifactId>arpack_combined_all</artifactId>
+      <version>0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.fommil.netlib</groupId>
+      <artifactId>native_system-java</artifactId>
+      <version>1.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.fommil.netlib</groupId>
+      <artifactId>netlib-native_ref-win-x86_64</artifactId>
+      <version>1.1</version>
+      <classifier>natives</classifier>
+    </dependency>
+    <dependency>
+      <groupId>com.github.fommil.netlib</groupId>
+      <artifactId>netlib-native_ref-win-i686</artifactId>
+      <version>1.1</version>
+      <classifier>natives</classifier>
+    </dependency>
+    <dependency>
+      <groupId>com.github.fommil.netlib</groupId>
+      <artifactId>netlib-native_system-win-x86_64</artifactId>
+      <version>1.1</version>
+      <classifier>natives</classifier>
+    </dependency>
+    <dependency>
+      <groupId>com.github.fommil.netlib</groupId>
+      <artifactId>netlib-native_system-win-i686</artifactId>
+      <version>1.1</version>
+      <classifier>natives</classifier>
+    </dependency>
+    <dependency>
+      <groupId>com.github.fommil.netlib</groupId>
+      <artifactId>netlib-native_ref-linux-x86_64</artifactId>
+      <version>1.1</version>
+      <classifier>natives</classifier>
+    </dependency>
+    <dependency>
+      <groupId>com.github.fommil.netlib</groupId>
+      <artifactId>netlib-native_system-linux-x86_64</artifactId>
+      <version>1.1</version>
+      <classifier>natives</classifier>
+    </dependency>
+    <dependency>
+      <groupId>com.github.fommil.netlib</groupId>
+      <artifactId>netlib-native_system-linux-i686</artifactId>
+      <version>1.1</version>
+      <classifier>natives</classifier>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
@@ -128,6 +185,35 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.4.3</version>
+      <executions>
+        <execution>
+          <phase>package</phase>
+          <goals>
+            <goal>shade</goal>
+          </goals>
+          <configuration>
+            <artifactSet>
+              <includes>
+                <include>net.sourceforge.f2j:arpack_combined_all</include>
+                <include>com.github.fommil:jniloader</include>
+                <include>com.github.fommil.netlib:native_system-java</include>
+                <include>com.github.fommil.netlib:netlib-native_ref-win-i686</include>
+                <include>com.github.fommil.netlib:netlib-native_ref-win-x86_64</include>
+                <include>com.github.fommil.netlib:netlib-native_system-win-i686</include>
+                <include>com.github.fommil.netlib:netlib-native_system-win-x86_64</include>
+                <include>com.github.fommil.netlib:netlib-native_ref-linux-x86_64</include>
+                <include>com.github.fommil.netlib:netlib-native_system-linux-x86_64</include>
+                <include>com.github.fommil.netlib:netlib-native_system-linux-i686</include>
+              </includes>
+            </artifactSet>
+          </configuration>
+        </execution>
+      </executions>
       </plugin>
     </plugins>
   </build>
