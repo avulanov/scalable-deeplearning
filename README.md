@@ -22,12 +22,10 @@ mvn package
 The jar library will be availabe in `target` folder.
 
 ### Performance configuration
-Scaladl uses [netlib-java](https://github.com/fommil/netlib-java) library for optimized numerical processing. If native libraries are not available at runtime, you will see a warning and pure JVM implementation will be used. To use optimized binaries: 
-  - include `com.github.fommil.netlib:all:1.1.2` in the project [or build Spark with `-Pnetlib-lgpl`](https://spark.apache.org/docs/latest/ml-guide.html)
-  - native BLAS library should be in the path of all nodes that run Spark. The required name is `libblas.so.3`. OpenBLAS is recommended. Below are the setup details for different platforms. Indication of successfull use of BLAS is the following line in Spark logs:
-```
-INFO JniLoader: successfully loaded ...netlib-native_system-....
-```
+Scaladl uses [netlib-java](https://github.com/fommil/netlib-java) library for optimized numerical processing with native [BLAS](https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms). All netlib-java classes are included in scaladl.jar. The latter has to be in the classpath before Spark's own libraries because Spark has a subset of netlib. In order to do this, set `spark.driver.userClassPathFirst` to `true` in `spark-defaults.conf`.
+
+If native BLAS libraries are not available at runtime or scaladl is not the first in the classpath, you will see a warning `WARN BLAS: Failed to load implementation from:` and reference or pure JVM implementation will be used. Native BLAS library such as OpenBLAS (`libopenblas.so` or `dll`) or ATLAS (`libatlas.so`) should be in the path of all nodes that run Spark. Netlib-java requires the library to be named as `libblas.so.3`, and one has to create a symlink. The same is for Windows and `libblas3.dll`. Below are the setup details for different platforms. With proper configuration, you will see an info `INFO JniLoader: successfully loaded ...netlib-native_system-....`
+
 ### Linux:
 Install native blas library (depending on your distributive):
 ```
