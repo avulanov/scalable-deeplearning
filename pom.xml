@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>scaladl</groupId>
   <artifactId>scaladl</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.2-SNAPSHOT</version>
   <name>${project.artifactId}</name>
   <description>Scalable implementation of Deep Learning for Spark</description>
   <inceptionYear>2016</inceptionYear>
@@ -144,7 +144,16 @@
             <descriptorRefs>
               <descriptorRef>jar-with-dependencies</descriptorRef>
             </descriptorRefs>
+            <appendAssemblyId>false</appendAssemblyId>
           </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
