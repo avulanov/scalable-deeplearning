@@ -19,9 +19,7 @@ package scaladl.tensor
 
 import org.scalatest.FunSuite
 
-import scaladl.util.SparkTestContext
-
-class DenseTensorSuite  extends FunSuite with SparkTestContext {
+class DenseTensorSuite  extends FunSuite {
 
   test ("value") {
     val data = Array[Double](1, 2, 3, 4, 5, 6, 7, 8)

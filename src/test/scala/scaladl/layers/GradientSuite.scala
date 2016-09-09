@@ -22,9 +22,8 @@ import org.scalatest.FunSuite
 
 import scaladl.layers.AnnTypes._
 import scaladl.tensor.DenseTensor
-import scaladl.util.SparkTestContext
 
-class GradientSuite extends FunSuite with SparkTestContext {
+class GradientSuite extends FunSuite {
 
   test("Gradient computation against numerical differentiation") {
     val x = DenseTensor[Double](Array(1.0, 1.0, 1.0), Array(3, 1))
