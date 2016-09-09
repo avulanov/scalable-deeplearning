@@ -17,9 +17,9 @@ Clone and compile:
 ```
 git clone https://github.com/avulanov/scalable-deeplearning.git
 cd scalable-deeplearning
-mvn package
+sbt assembly (or mvn assembly)
 ```
-The jar library will be availabe in `target` folder.
+The jar library will be availabe in `target` folder. `assembly` includes optimized numerical processing library netlib-java. Optionally, one can build `package`.
 
 ### Performance configuration
 Scaladl uses [netlib-java](https://github.com/fommil/netlib-java) library for optimized numerical processing with native [BLAS](https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms). All netlib-java classes are included in scaladl.jar. The latter has to be in the classpath before Spark's own libraries because Spark has a subset of netlib. In order to do this, set `spark.driver.userClassPathFirst` to `true` in `spark-defaults.conf`.
