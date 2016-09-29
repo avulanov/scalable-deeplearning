@@ -239,6 +239,46 @@ private[layers] class SigmoidFunction extends ActivationFunction {
 }
 
 /**
+ * Implements Linear activation function
+ */
+private[layers] class LinearFunction extends ActivationFunction {
+
+  override def eval: (Double) => Double = x => x
+
+  override def derivative: (Double) => Double = z => 1
+}
+
+/**
+ * Implements relu activation function
+ */
+private[layers] class ReluFunction extends ActivationFunction {
+
+  override def eval: (Double) => Double = x => {
+    if (x > 0) x
+    else 0
+  }
+
+  override def derivative: (Double) => Double = z => {
+    if (z > 0) 1
+    else 0
+  }
+}
+
+/**
+ * Implements tanh activation function
+ */
+private[layers] class TanhFunction extends ActivationFunction {
+
+  override def eval: (Double) => Double = x => {
+    ( 2 / (1 + math.exp(-2 * x))) - 1
+  }
+
+  override def derivative: (Double) => Double = z => {
+    1 - math.pow((( 2 / (1 + math.exp(-2 * z))) - 1), 2)
+  }
+}
+
+/**
  * Functional layer properties, y = f(x)
  *
  * @param activationFunction activation function
@@ -364,8 +404,7 @@ object FeedForwardTopology {
    *                Softmax is default
    * @return multilayer perceptron topology
    */
-  def multiLayerPerceptron(
-                            layerSizes: Array[Int],
+  def multiLayerPerceptron(layerSizes: Array[Int],
                             softmaxOnTop: Boolean = true): FeedForwardTopology = {
     val layers = new Array[Layer]((layerSizes.length - 1) * 2)
     for(i <- 0 until layerSizes.length - 1) {
@@ -380,6 +419,26 @@ object FeedForwardTopology {
           }
         } else {
           new FunctionalLayer(new SigmoidFunction())
+        }
+    }
+    FeedForwardTopology(layers)
+  }
+
+  /**
+   * Creates a multi-layer perceptron for regression
+   *
+   * @param layerSizes sizes of layers including input and output size
+   * @return multilayer perceptron topology
+   */
+  def multiLayerPerceptronRegression(layerSizes: Array[Int]): FeedForwardTopology = {
+    val layers = new Array[Layer]((layerSizes.length - 1) * 2)
+    for (i <- 0 until layerSizes.length - 1) {
+      layers(i * 2) = new AffineLayer(layerSizes(i), layerSizes(i + 1))
+      layers(i * 2 + 1) =
+        if (i == layerSizes.length - 2) {
+          new LinearLayerWithSquaredError()
+        } else {
+          new FunctionalLayer(new TanhFunction())
         }
     }
     FeedForwardTopology(layers)
