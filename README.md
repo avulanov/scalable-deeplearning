@@ -39,6 +39,17 @@ Add it to your library path. Make sure there is no other folder with `libblas.so
 ```
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/your/blas
 ```
+#### Linux: Ubuntu 16.04
+Install native blas library
+```
+sudo apt-get install libopenblas-dev <OR> libatlas-dev
+```
+Create symlink
+```
+sudo /usr/sbin/update-alternatives --config libblas.so.3
+sudo /usr/sbin/update-alternatives --config liblapack.so.3
+```
+Not neccesary export if you install package from repo.
 ### Windows:
 Copy the following dlls from MINGW distribution and from OpenBLAS to the folder `blas`. Make sure they are all the same 64 or 32 bit. Add that folder to your `path` variable.
 ```
@@ -56,7 +67,7 @@ libblas3.dll // copy of libopenblas.dll
 ### Built-in examples
 Scaldl provides working examples of MNIST classification and pre-training with stacked autoencoder. Examples are in [`scaladl.examples`](https://github.com/avulanov/scalable-deeplearning/tree/master/src/main/scala/scaladl/examples) package. They can be run via Spark submit:
 ```
-./spark-submit --class scaladl.MnistClassificaion --master spark://master:7077 /path/to/scaldl.jar /path/to/mnist-libsvm
+./spark-submit --class scaladl.examples.MnistClassification --master spark://master:7077 /path/to/scaldl.jar /path/to/mnist-libsvm
 ```
 ### Spark shell
 Start Spark with this library:
