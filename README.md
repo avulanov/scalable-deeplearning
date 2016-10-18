@@ -97,8 +97,8 @@ import org.apache.spark.ml.scaladl.{MultilayerPerceptronClassifier, StackedAutoe
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
 val train = spark.read.format("libsvm").option("numFeatures", 784).load("mnist.scale").persist()
 val test = spark.read.format("libsvm").option("numFeatures", 784).load("mnist.scale.t").persist()
-train.count()
-test.count()
+train.count() // materialize data lazy persisted in memory
+test.count() // materialize data lazy persisted in memory
 val stackedAutoencoder = new StackedAutoencoder().setLayers(Array(784, 32))
   .setInputCol("features")
   .setOutputCol("output")
