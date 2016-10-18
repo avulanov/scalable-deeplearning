@@ -56,12 +56,12 @@ libblas3.dll // copy of libopenblas.dll
 ### Built-in examples
 Scaldl provides working examples of MNIST classification and pre-training with stacked autoencoder. Examples are in [`scaladl.examples`](https://github.com/avulanov/scalable-deeplearning/tree/master/src/main/scala/scaladl/examples) package. They can be run via Spark submit:
 ```
-./spark-submit --class scaladl.MnistClassificaion --master spark://master:7077 /path/to/scaldl.jar /path/to/mnist-libsvm
+./spark-submit --class scaladl.examples.MnistClassification --master spark://master:7077 /path/to/scalable-deeplearning-assembly-1.0.0.jar /path/to/mnist-libsvm
 ```
 ### Spark shell
 Start Spark with this library:
 ```
-./spark-shell --jars scaladl.jar
+./spark-shell --jars /path/to/scalable-deeplearning-assembly-1.0.0.jar
 ```
 Or use it as external dependency for your application.
 
@@ -73,11 +73,18 @@ MNIST classification
 
 ```scala
 import org.apache.spark.ml.scaladl.MultilayerPerceptronClassifier
+import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
 val train = spark.read.format("libsvm").option("numFeatures", 784).load("mnist.scale").persist()
+val test = spark.read.format("libsvm").option("numFeatures", 784).load("mnist.scale.t").persist()
 train.count() // materialize data lazy persisted in memory
+test.count() // materialize data lazy persisted in memory
 val trainer = new MultilayerPerceptronClassifier().setLayers(Array(784, 32, 10)).setMaxIter(100)
 val model = trainer.fit(train)
 val result = model.transform(test)
+val predictionAndLabels = result.select("prediction", "label")
+val evaluator = new MulticlassClassificationEvaluator()
+  .setMetricName("accuracy")
+println("Accuracy: " + evaluator.evaluate(predictionAndLabels))
 ```
 ### Stacked Autoencoder
 Pre-training
@@ -87,8 +94,11 @@ Pre-training
   - Initialize the multilayer perceptron classifier with 784 inputs, 32 neurons in hidden layer and 
 ```scala
 import org.apache.spark.ml.scaladl.{MultilayerPerceptronClassifier, StackedAutoencoder}
-val train = spark.read.format("libsvm").option("numFeatures", 784).load(mnistTrain).persist()
-train.count()
+import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
+val train = spark.read.format("libsvm").option("numFeatures", 784).load("mnist.scale").persist()
+val test = spark.read.format("libsvm").option("numFeatures", 784).load("mnist.scale.t").persist()
+train.count() // materialize data lazy persisted in memory
+test.count() // materialize data lazy persisted in memory
 val stackedAutoencoder = new StackedAutoencoder().setLayers(Array(784, 32))
   .setInputCol("features")
   .setOutputCol("output")
@@ -102,6 +112,10 @@ System.arraycopy(autoWeights.toArray, 0, initialWeights.toArray, 0, autoWeights.
 trainer.setInitialWeights(initialWeights).setMaxIter(10)
 val model = trainer.fit(train)
 val result = model.transform(test)
+val predictionAndLabels = result.select("prediction", "label")
+val evaluator = new MulticlassClassificationEvaluator()
+  .setMetricName("accuracy")
+println("Accuracy: " + evaluator.evaluate(predictionAndLabels))
 ```
 ## Contributions
 Contributions are welcome, in particular in the following areas:
