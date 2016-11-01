@@ -99,9 +99,6 @@ private object RegressionLabelConverter {
       output(0)
     }
   }
-//
-//  override val uid: String = Identifiable.randomUID("Regression Converter")
-//  override def copy(extra: ParamMap): MultilayerPerceptronRegressor = defaultCopy(extra)
 }
 
  /**
