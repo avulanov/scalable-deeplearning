@@ -37,26 +37,6 @@ private[layers] trait LossFunction {
   def loss(output: Tensor, target: Tensor, delta: Tensor): Double
 }
 
-private[layers] class LinearLayerWithSquaredError extends Layer {
-  override val weightSize = 0
-  override val inPlace = true
-
-  override def outputSize(inputSize: Int): Int = inputSize
-  override def model(weights: Tensor): LayerModel =
-    new LinearLayerModelWithSquaredError()
-  override def initModel(weights: Tensor, random: Random): LayerModel =
-    new LinearLayerModelWithSquaredError()
-}
-
-private[layers] class LinearLayerModelWithSquaredError
-  extends FunctionalLayerModel(new FunctionalLayer(new LinearFunction)) with LossFunction {
-  override def loss(output: Tensor, target: Tensor, delta: Tensor): Double = {
-    DenseTensor.applyFunction(output, target, delta, (o: Double, t: Double) => o - t)
-    val error = (delta :* delta).sum / 2 / output.shape(1)
-    error
-  }
-}
-
 class SigmoidLayerWithSquaredError extends Layer {
   override val weightSize = 0
   override def outputSize(inputSize: Int): Int = inputSize

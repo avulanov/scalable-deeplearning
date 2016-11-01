@@ -25,7 +25,6 @@ import org.apache.spark.ml.{PredictionModel, Predictor, PredictorParams}
 import org.apache.spark.ml.feature.LabeledPoint
 import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.ml.param._
-import org.apache.spark.ml.param.shared._
 import org.apache.spark.ml.util._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.Dataset
@@ -33,113 +32,6 @@ import org.apache.spark.sql.functions.{max, min}
 import org.apache.spark.sql.types._
 
 import scaladl.layers.{FeedForwardTopology, FeedForwardTrainer}
-
-
-/** Params for Multilayer Perceptron. */
-private[ml] trait MultilayerPerceptronBasicParams extends PredictorParams
-  with HasSeed with HasMaxIter with HasTol with HasStepSize {
-   /**
-    * Layer sizes including input size and output size.
-    *
-    * @group param
-    */
-  final val layers: IntArrayParam = new IntArrayParam(this, "layers",
-    "Sizes of layers including input and output from bottom to the top." +
-      " E.g., Array(780, 100, 10) means 780 inputs, " +
-      "hidden layer with 100 neurons and output layer of 10 neurons.",
-     (t: Array[Int]) => t.forall(ParamValidators.gt(0)) && t.length > 1
-  )
-
-  /** @group setParam */
-  def setLayers(value: Array[Int]): this.type = set(layers, value)
-
-  /** @group getParam */
-  final def getLayers: Array[Int] = $(layers)
-
-  /**
-   * Block size for stacking input data in matrices. Speeds up the computations.
-   * Cannot be more than the size of the dataset.
-   *
-   * @group expertParam
-   */
-  final val blockSize: IntParam = new IntParam(this, "blockSize",
-    "Block size for stacking input data in matrices.",
-    ParamValidators.gt(0))
-
-  /** @group setParam */
-  def setBlockSize(value: Int): this.type = set(blockSize, value)
-
-  /** @group getParam */
-  final def getBlockSize: Int = $(blockSize)
-
-  /**
-   * The solver algorithm for optimization.
-   * Supported options: "gd" (minibatch gradient descent) or "l-bfgs".
-   * Default: "l-bfgs"
-   *
-   * @group expertParam
-   */
-  final val solver: Param[String] = new Param[String](this, "solver",
-    "The solver algorithm for optimization. Supported options: " +
-      s"${MultilayerPerceptronRegressor.supportedSolvers.mkString(", ")}. (Default l-bfgs)",
-    ParamValidators.inArray[String](MultilayerPerceptronRegressor.supportedSolvers))
-
-  /** @group expertGetParam */
-  final def getSolver: String = $(solver)
-
-  /**
-   * Param indicating whether to scale the labels to be between 0 and 1.
-   *
-   * @group param
-   */
-  final val stdLabels: BooleanParam = new BooleanParam(
-    this, "stdLabels", "Whether to standardize the dataset's labels to between 0 and 1.")
-
-  /** @group getParam */
-  def setStandardizeLabels(value: Boolean): this.type = set(stdLabels, value)
-
-  /** @group getParam */
-  def getStandardizeLabels: Boolean = $(stdLabels)
-
-  /**
-   * Set the maximum number of iterations.
-   * Default is 100.
-   *
-   * @group setParam
-   */
-  def setMaxIter(value: Int): this.type = set(maxIter, value)
-
-  /**
-   * Set the convergence tolerance of iterations.
-   * Smaller value will lead to higher accuracy with the cost of more iterations.
-   * Default is 1E-4.
-   *
-   * @group setParam
-   */
-  def setTol(value: Double): this.type = set(tol, value)
-
-  /**
-   * Set the seed for weights initialization.
-   * Default is 11L.
-   *
-   * @group setParam
-   */
-  def setSeed(value: Long): this.type = set(seed, value)
-
-  /**
-   * The initial weights of the model.
-   *
-   * @group expertParam
-   */
-  final val initialWeights: Param[Vector] = new Param[Vector](this, "initialWeights",
-    "The initial weights of the model")
-
-  /** @group expertGetParam */
-  final def getInitialWeights: Vector = $(initialWeights)
-
-  setDefault(seed -> 11L, maxIter -> 100, stdLabels -> true, tol -> 1e-4, layers -> Array(1, 1),
-    solver -> MultilayerPerceptronRegressor.LBFGS, stepSize -> 0.03, blockSize -> 128)
-}
 
  /**
   * Params that need to mixin with both MultilayerPerceptronRegressorModel and
@@ -173,7 +65,22 @@ private[ml] trait MultilayerPerceptronRegressorParams extends PredictorParams {
   /** @group getParam */
   final def getMax: Double = $(maximum)
 
-  setDefault(minimum -> 0.0, maximum -> 0.0)
+
+ /**
+  * Param indicating whether to scale the labels to be between 0 and 1.
+  *
+  * @group param
+  */
+ final val stdLabels: BooleanParam = new BooleanParam(
+   this, "stdLabels", "Whether to standardize the dataset's labels to between 0 and 1.")
+
+ /** @group getParam */
+ def setStandardizeLabels(value: Boolean): this.type = set(stdLabels, value)
+
+ /** @group getParam */
+ def getStandardizeLabels: Boolean = $(stdLabels)
+
+  setDefault(minimum -> 0.0, maximum -> 0.0, stdLabels -> true)
 }
 
 /** Label to vector converter. */
@@ -226,7 +133,7 @@ private object RegressionLabelConverter {
 class MultilayerPerceptronRegressor (
     override val uid: String)
   extends Predictor[Vector, MultilayerPerceptronRegressor, MultilayerPerceptronRegressorModel]
-    with MultilayerPerceptronBasicParams with MultilayerPerceptronRegressorParams with Serializable
+    with MultilayerPerceptronParams with MultilayerPerceptronRegressorParams with Serializable
     with DefaultParamsWritable {
 
   /**
@@ -237,20 +144,20 @@ class MultilayerPerceptronRegressor (
   def setInitialWeights(value: Vector): this.type = set(initialWeights, value)
 
   /**
-   * Sets the value of param [[solver]].
+   * Sets the value of param [[optimizer]].
    * Default is "l-bfgs".
    *
    * @group expertSetParam
    */
-  def setSolver(value: String): this.type = set(solver, value)
+  def setOptimizer(value: String): this.type = set(optimizer, value)
 
   /**
-   * Sets the value of param [[stepSize]] (applicable only for solver "gd").
+   * Sets the value of param [[learningRate]] (applicable only for solver "gd").
    * Default is 0.03.
    *
    * @group setParam
    */
-  def setStepSize(value: Double): this.type = set(stepSize, value)
+  def setLearningRate(value: Double): this.type = set(learningRate, value)
 
   def this() = this(Identifiable.randomUID("mlpr"))
 
@@ -265,16 +172,13 @@ class MultilayerPerceptronRegressor (
   override protected def train(dataset: Dataset[_]): MultilayerPerceptronRegressorModel = {
     val myLayers = getLayers
     val lpData: RDD[LabeledPoint] = extractLabeledPoints(dataset)
-    if (getStandardizeLabels) {
-      // Compute minimum and maximum values in the training labels for scaling.
-      val minmax = dataset
-        .agg(max("label").cast(DoubleType), min("label").cast(DoubleType)).collect()(0)
-      setMin(minmax(1).asInstanceOf[Double])
-      setMax(minmax(0).asInstanceOf[Double])
-    }
+    // Compute minimum and maximum values in the training labels for scaling.
+    val minmax = dataset
+      .agg(max("label").cast(DoubleType), min("label").cast(DoubleType)).collect()(0)
     // Encode and scale labels to prepare for training.
     val data = lpData.map(lp =>
-      RegressionLabelConverter.encodeLabeledPoint(lp, $(minimum), $(maximum)))
+      RegressionLabelConverter.encodeLabeledPoint(lp, minmax(1).asInstanceOf[Double],
+        minmax(0).asInstanceOf[Double]))
     // Initialize the network architecture with the specified layer count and sizes.
     val topology = FeedForwardTopology.multiLayerPerceptronRegression(myLayers)
     // Prepare the Network trainer based on our settings.
@@ -284,18 +188,18 @@ class MultilayerPerceptronRegressor (
     } else {
       trainer.setSeed($(seed))
     }
-     if ($(solver) == MultilayerPerceptronRegressor.LBFGS) {
+     if ($(optimizer) == MultilayerPerceptronRegressor.LBFGS) {
        trainer.LBFGSOptimizer
          .setConvergenceTol($(tol))
          .setNumIterations($(maxIter))
-     } else if ($(solver) == MultilayerPerceptronRegressor.GD) {
+     } else if ($(optimizer) == MultilayerPerceptronRegressor.GD) {
        trainer.SGDOptimizer
          .setNumIterations($(maxIter))
          .setConvergenceTol($(tol))
-         .setStepSize($(stepSize))
+         .setStepSize($(learningRate))
      } else {
        throw new IllegalArgumentException(
-         s"The solver $solver is not supported by MultilayerPerceptronRegressor.")
+         s"The solver $optimizer is not supported by MultilayerPerceptronRegressor.")
      }
     trainer.setStackSize($(blockSize))
     // Train Model.

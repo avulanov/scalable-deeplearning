@@ -239,46 +239,6 @@ private[layers] class SigmoidFunction extends ActivationFunction {
 }
 
 /**
- * Implements Linear activation function
- */
-private[layers] class LinearFunction extends ActivationFunction {
-
-  override def eval: (Double) => Double = x => x
-
-  override def derivative: (Double) => Double = z => 1
-}
-
-/**
- * Implements relu activation function
- */
-private[layers] class ReluFunction extends ActivationFunction {
-
-  override def eval: (Double) => Double = x => {
-    if (x > 0) x
-    else 0
-  }
-
-  override def derivative: (Double) => Double = z => {
-    if (z > 0) 1
-    else 0
-  }
-}
-
-/**
- * Implements tanh activation function
- */
-private[layers] class TanhFunction extends ActivationFunction {
-
-  override def eval: (Double) => Double = x => {
-    ( 2 / (1 + math.exp(-2 * x))) - 1
-  }
-
-  override def derivative: (Double) => Double = z => {
-    1 - math.pow((( 2 / (1 + math.exp(-2 * z))) - 1), 2)
-  }
-}
-
-/**
  * Functional layer properties, y = f(x)
  *
  * @param activationFunction activation function
@@ -436,9 +396,9 @@ object FeedForwardTopology {
       layers(i * 2) = new AffineLayer(layerSizes(i), layerSizes(i + 1))
       layers(i * 2 + 1) =
         if (i == layerSizes.length - 2) {
-          new LinearLayerWithSquaredError()
+          new EmptyLayerWithSquaredError()
         } else {
-          new FunctionalLayer(new TanhFunction())
+          new FunctionalLayer(new SigmoidFunction())
         }
     }
     FeedForwardTopology(layers)
@@ -691,9 +651,9 @@ private[layers] class ANNUpdater extends Updater {
  * @param outputSize output size
  */
 class FeedForwardTrainer(
-                                      topology: Topology,
-                                      val inputSize: Int,
-                                      val outputSize: Int) extends Serializable {
+    topology: Topology,
+    val inputSize: Int,
+    val outputSize: Int) extends Serializable {
 
   private var _seed = 11L
   private var _weights: Vector = null
