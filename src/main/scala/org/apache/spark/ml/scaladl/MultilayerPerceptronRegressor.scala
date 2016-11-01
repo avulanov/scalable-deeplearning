@@ -39,33 +39,6 @@ import scaladl.layers.{FeedForwardTopology, FeedForwardTrainer}
   */
 private[ml] trait MultilayerPerceptronRegressorParams extends PredictorParams {
 
-  final val minimum: DoubleParam = new DoubleParam(this, "min",
-    "Minimum value for scaling data.")
-
-  /**
-   * Set the minimum value in the training set labels.
-   *
-   * @group setParam
-   */
-  def setMin(value: Double): this.type = set(minimum, value)
-
-  /** @group getParam */
-  final def getMin: Double = $(minimum)
-
-  final val maximum: DoubleParam = new DoubleParam(this, "max",
-    "Max value for scaling data.")
-
-  /**
-   * Set the maximum value in the training set labels.
-   *
-   * @group setParam
-   */
-  def setMax(value: Double): this.type = set(maximum, value)
-
-  /** @group getParam */
-  final def getMax: Double = $(maximum)
-
-
  /**
   * Param indicating whether to scale the labels to be between 0 and 1.
   *
@@ -80,12 +53,14 @@ private[ml] trait MultilayerPerceptronRegressorParams extends PredictorParams {
  /** @group getParam */
  def getStandardizeLabels: Boolean = $(stdLabels)
 
-  setDefault(minimum -> 0.0, maximum -> 0.0, stdLabels -> true)
+  setDefault(stdLabels -> true)
 }
 
 /** Label to vector converter. */
 private object RegressionLabelConverter {
 
+  var minimum = 0.0
+  var maximum = 0.0
   /**
    * Encodes a label as a vector.
    * Returns a vector of length 1 with the label in the 0th position
@@ -93,16 +68,19 @@ private object RegressionLabelConverter {
    * @param labeledPoint labeled point
    * @return pair of features and vector encoding of a label
    */
-  def encodeLabeledPoint(labeledPoint: LabeledPoint, min: Double, max: Double): (Vector, Vector) = {
+  def encodeLabeledPoint(labeledPoint: LabeledPoint, min: Double, max: Double,
+         model: MultilayerPerceptronRegressor): (Vector, Vector) = {
     val output = Array.fill(1)(0.0)
-    if (max-min != 0.0) {
+    if (model.getStandardizeLabels) {
+      minimum = min
+      maximum = max
       output(0) = (labeledPoint.label - min) / (max - min)
     }
     else {
     // When min and max are equal, cannot min-max scale due to divide by zero error. Setting scaled
     // result to zero will lead to consistent predictions, as the min will be added during decoding.
     // Min and max will both be 0 if label scaling is turned off, and this code branch will run.
-      output(0) = labeledPoint.label - min
+      output(0) = labeledPoint.label
     }
     (labeledPoint.features, Vectors.dense(output))
   }
@@ -114,13 +92,16 @@ private object RegressionLabelConverter {
    * @param output label encoded with a vector
    * @return label
    */
-  def decodeLabel(output: Vector, min: Double, max: Double): Double = {
-    if (max-min != 0.0) {
-      (output(0) * (max - min)) + min
+  def decodeLabel(output: Vector, model: MultilayerPerceptronRegressorModel): Double = {
+    if (model.getStandardizeLabels) {
+      (output(0) * (maximum - minimum)) + minimum
     } else {
       output(0)
     }
   }
+//
+//  override val uid: String = Identifiable.randomUID("Regression Converter")
+//  override def copy(extra: ParamMap): MultilayerPerceptronRegressor = defaultCopy(extra)
 }
 
  /**
@@ -203,14 +184,19 @@ class MultilayerPerceptronRegressor (
     val myLayers = getLayers
     val lpData: RDD[LabeledPoint] = extractLabeledPoints(dataset)
     // Compute minimum and maximum values in the training labels for scaling.
-    val minmax = dataset
-      .agg(max("label").cast(DoubleType), min("label").cast(DoubleType)).collect()(0)
-    setMin(minmax(1).asInstanceOf[Double])
-    setMax(minmax(0).asInstanceOf[Double])
-    // Encode and scale labels to prepare for training.
-    val data = lpData.map(lp =>
-      RegressionLabelConverter.encodeLabeledPoint(lp, minmax(1).asInstanceOf[Double],
-        minmax(0).asInstanceOf[Double]))
+    val data = {
+      if (getStandardizeLabels) {
+        val minmax = dataset
+          .agg(max("label").cast(DoubleType), min("label").cast(DoubleType)).collect()(0)
+        // Encode and scale labels to prepare for training.
+        lpData.map(lp =>
+          RegressionLabelConverter.encodeLabeledPoint(lp, minmax(1).asInstanceOf[Double],
+            minmax(0).asInstanceOf[Double], this))
+      } else {
+        lpData.map(lp =>
+          RegressionLabelConverter.encodeLabeledPoint(lp, 0.0, 0.0, this))
+      }
+    }
     // Initialize the network architecture with the specified layer count and sizes.
     val topology = FeedForwardTopology.multiLayerPerceptronRegression(myLayers)
     // Prepare the Network trainer based on our settings.
@@ -287,7 +273,7 @@ class MultilayerPerceptronRegressorModel private[ml] (
    * This internal method is used to implement [[transform()]] and output [[predictionCol]].
    */
   override def predict(features: Vector): Double = {
-    RegressionLabelConverter.decodeLabel(mlpModel.predict(features), $(minimum), $(maximum))
+    RegressionLabelConverter.decodeLabel(mlpModel.predict(features), this)
   }
 
   override def copy(extra: ParamMap): MultilayerPerceptronRegressorModel = {
