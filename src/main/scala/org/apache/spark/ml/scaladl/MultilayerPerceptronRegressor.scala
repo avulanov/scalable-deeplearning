@@ -136,6 +136,36 @@ class MultilayerPerceptronRegressor (
     with MultilayerPerceptronParams with MultilayerPerceptronRegressorParams with Serializable
     with DefaultParamsWritable {
 
+   /** @group setParam */
+   def setLayers(value: Array[Int]): this.type = set(layers, value)
+
+   /** @group setParam */
+   def setBlockSize(value: Int): this.type = set(blockSize, value)
+
+   /**
+    * Set the maximum number of iterations.
+    * Default is 100.
+    *
+    * @group setParam
+    */
+   def setMaxIter(value: Int): this.type = set(maxIter, value)
+
+   /**
+    * Set the convergence tolerance of iterations.
+    * Smaller value will lead to higher accuracy with the cost of more iterations.
+    * Default is 1E-4.
+    *
+    * @group setParam
+    */
+   def setTol(value: Double): this.type = set(tol, value)
+
+   /**
+    * Set the seed for weights initialization if weights are not set
+    *
+    * @group setParam
+    */
+   def setSeed(value: Long): this.type = set(seed, value)
+
   /**
    * Sets the value of param [[initialWeights]].
    *
@@ -145,7 +175,7 @@ class MultilayerPerceptronRegressor (
 
   /**
    * Sets the value of param [[optimizer]].
-   * Default is "l-bfgs".
+   * Default is "LBFGS".
    *
    * @group expertSetParam
    */
@@ -175,6 +205,8 @@ class MultilayerPerceptronRegressor (
     // Compute minimum and maximum values in the training labels for scaling.
     val minmax = dataset
       .agg(max("label").cast(DoubleType), min("label").cast(DoubleType)).collect()(0)
+    setMin(minmax(1).asInstanceOf[Double])
+    setMax(minmax(0).asInstanceOf[Double])
     // Encode and scale labels to prepare for training.
     val data = lpData.map(lp =>
       RegressionLabelConverter.encodeLabeledPoint(lp, minmax(1).asInstanceOf[Double],
@@ -188,11 +220,11 @@ class MultilayerPerceptronRegressor (
     } else {
       trainer.setSeed($(seed))
     }
-     if ($(optimizer) == MultilayerPerceptronRegressor.LBFGS) {
+     if (getOptimizer == "LBFGS") {
        trainer.LBFGSOptimizer
          .setConvergenceTol($(tol))
          .setNumIterations($(maxIter))
-     } else if ($(optimizer) == MultilayerPerceptronRegressor.GD) {
+     } else if (getOptimizer == "GD") {
        trainer.SGDOptimizer
          .setNumIterations($(maxIter))
          .setConvergenceTol($(tol))
