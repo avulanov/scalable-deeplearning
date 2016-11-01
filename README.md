@@ -118,7 +118,7 @@ Contributions are welcome, in particular in the following areas:
     - Implement own version of L-BFGS to remove dependency on breeze
 
 ## Contribution Guide
-To contribute to the project, you'll need to build and modify your fork of the project. 
+To contribute to the project, you'll need to build and modify your cloned fork of the project. 
 
 Once you've made your changes, run:
 ```
