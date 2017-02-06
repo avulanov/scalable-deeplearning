@@ -364,8 +364,7 @@ object FeedForwardTopology {
    *                Softmax is default
    * @return multilayer perceptron topology
    */
-  def multiLayerPerceptron(
-                            layerSizes: Array[Int],
+  def multiLayerPerceptron(layerSizes: Array[Int],
                             softmaxOnTop: Boolean = true): FeedForwardTopology = {
     val layers = new Array[Layer]((layerSizes.length - 1) * 2)
     for(i <- 0 until layerSizes.length - 1) {
@@ -378,6 +377,26 @@ object FeedForwardTopology {
             // TODO: squared error is more natural but converges slower
             new SigmoidLayerWithSquaredError()
           }
+        } else {
+          new FunctionalLayer(new SigmoidFunction())
+        }
+    }
+    FeedForwardTopology(layers)
+  }
+
+  /**
+   * Creates a multi-layer perceptron for regression
+   *
+   * @param layerSizes sizes of layers including input and output size
+   * @return multilayer perceptron topology
+   */
+  def multiLayerPerceptronRegression(layerSizes: Array[Int]): FeedForwardTopology = {
+    val layers = new Array[Layer]((layerSizes.length - 1) * 2)
+    for (i <- 0 until layerSizes.length - 1) {
+      layers(i * 2) = new AffineLayer(layerSizes(i), layerSizes(i + 1))
+      layers(i * 2 + 1) =
+        if (i == layerSizes.length - 2) {
+          new EmptyLayerWithSquaredError()
         } else {
           new FunctionalLayer(new SigmoidFunction())
         }
@@ -632,9 +651,9 @@ private[layers] class ANNUpdater extends Updater {
  * @param outputSize output size
  */
 class FeedForwardTrainer(
-                                      topology: Topology,
-                                      val inputSize: Int,
-                                      val outputSize: Int) extends Serializable {
+    topology: Topology,
+    val inputSize: Int,
+    val outputSize: Int) extends Serializable {
 
   private var _seed = 11L
   private var _weights: Vector = null
