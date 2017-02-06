@@ -56,7 +56,7 @@ libblas3.dll // copy of libopenblas.dll
 ### Built-in examples
 Scaldl provides working examples of MNIST classification and pre-training with stacked autoencoder. Examples are in [`scaladl.examples`](https://github.com/avulanov/scalable-deeplearning/tree/master/src/main/scala/scaladl/examples) package. They can be run via Spark submit:
 ```
-./spark-submit --class scaladl.MnistClassificaion --master spark://master:7077 /path/to/scaldl.jar /path/to/mnist-libsvm
+./spark-submit --class scaladl.examples.MnistClassification --master spark://master:7077 /path/to/scaldl.jar /path/to/mnist-libsvm
 ```
 ### Spark shell
 Start Spark with this library:
@@ -74,7 +74,9 @@ MNIST classification
 ```scala
 import org.apache.spark.ml.scaladl.MultilayerPerceptronClassifier
 val train = spark.read.format("libsvm").option("numFeatures", 784).load("mnist.scale").persist()
+val test = spark.read.format("libsvm").option("numFeatures", 784).load("mnist.scale.t").persist()
 train.count() // materialize data lazy persisted in memory
+test.count() // materialize data lazy persisted in memory
 val trainer = new MultilayerPerceptronClassifier().setLayers(Array(784, 32, 10)).setMaxIter(100)
 val model = trainer.fit(train)
 val result = model.transform(test)
@@ -101,7 +103,6 @@ val initialWeights = trainer.fit(train).weights
 System.arraycopy(autoWeights.toArray, 0, initialWeights.toArray, 0, autoWeights.toArray.length)
 trainer.setInitialWeights(initialWeights).setMaxIter(10)
 val model = trainer.fit(train)
-val result = model.transform(test)
 ```
 ## Contributions
 Contributions are welcome, in particular in the following areas:
